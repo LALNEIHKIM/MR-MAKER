@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPL PAYMENT WORKSPACE</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { min-height: 100vh; background-color: #332e1d; }
+
+    #screen2 { display: flex; height: 100vh; background: #332e1d; flex-direction: row; }
+    .sidebar { width: 140px; min-width: 140px; border-right: 2px solid #e0e0e0; padding: 8px 6px; display: flex; flex-direction: column; justify-content: space-between; background: #00796b; }
+    .sidebar-top { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 40vh; }
+    .btn-add-mr { background: linear-gradient(180deg, #fbe3d5 0%, #e2b99f 100%); color: #000000; font-size: 13px; font-weight: 800; padding: 6px 4px; border-radius: 4px; cursor: pointer; text-align: center; }
+    .btn-mr-tab {
+      background: #ffffff; color: #333333; font-size: 12px; font-weight: 900; padding: 5px 4px; border-radius: 4px; border: 1.5px solid #bbb;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; text-align: center; text-transform: uppercase; word-break: break-all;
+    }
+    .btn-mr-tab.active { background: linear-gradient(180deg, #00c853 0%, #007e33 100%); color: #ffffff; border-top: 1.5px solid #72ff9f; border-bottom: 2.5px solid #004d1f; }
+
+    .sidebar-bottom { display: flex; flex-direction: column; gap: 5px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.2); }
+    .btn-sidebar-fn { background: linear-gradient(180deg, #1b499b 0%, #0d2857 100%); color: #ffffff; font-size: 11px; font-weight: 800; padding: 6px 4px; border: none; border-radius: 4px; cursor: pointer; text-align: center; text-decoration: none; display: block; }
+    .btn-dlr-sidebar { background: linear-gradient(180deg, #d35400 0%, #a04000 100%); font-weight: 900; }
+
+    .workspace-main { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; background: #f4f4f4; }
+    .main-banner { background: linear-gradient(180deg, #2b579a 0%, #153465 100%); color: #ffffff; font-size: 15px; font-weight: 900; text-align: center; padding: 5px; border-radius: 4px; }
+    .search-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; }
+
+    .action-buttons { display: flex; gap: 2px; align-items: center; }
+    .btn-action { font-weight: bold; font-size: 11px; border: none; padding: 2px 4px; border-radius: 4px; cursor: pointer; color: #ffffff; height: 25px; display: flex; align-items: center; text-decoration: none; }
+
+    .btn-goto-home { background: #2c04f7; }
+    .btn-edit { background: #2980b9; }
+    .btn-undo-redo { background: #f53c17; height: 25px; }
+    .btn-page-total { background: #2c3e50; color: #fff; font-weight: 900; font-size: 11px; border: none; padding: 0 8px; height: 25px; border-radius: 4px; cursor: pointer; }
+
+    .btn-view-toggle { background: #6c757d; color: #fff; font-weight: 900; font-size: 11px; border: none; padding: 0 10px; height: 25px; border-radius: 4px; cursor: pointer; }
+    .btn-view-toggle.active-view { background: #007e33 !important; }
+
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 190px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 10; border-radius: 4px; }
+    .dropdown-content button { color: black; padding: 8px 12px; text-decoration: none; display: block; width: 100%; border: none; background: none; text-align: left; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .dropdown-content button:hover { background-color: #f1f1f1; }
+    .dropdown:hover .dropdown-content { display: block; }
+
+    .rs-total-box {
+      background: #ffffff; border: 2px solid #007e33; height: 25px; min-width: 110px; display: flex; align-items: center; padding: 0 6px;
+      font-size: 12px; font-weight: 900; color: #000000; border-radius: 4px; gap: 4px; cursor: pointer;
+    }
+    .rs-total-box span { color: #c0392b; font-size: 13px; }
+
+    .table-container { flex: 1; overflow: auto; border: 1.5px solid #000000; background: #ffffff; }
+    table { border-collapse: collapse; font-size: 11px; width: max-content; min-width: 100%; }
+    th, td { border: 1px solid #000000; padding: 4px 4px; text-align: left; min-width: 35px; max-width: 120px; }
+    th { 
+      background: #ffffff; 
+      font-weight: bold; 
+      position: sticky; 
+      top: 0; 
+      z-index: 5; 
+      text-align: center; 
+      white-space: pre-line !important; 
+      word-break: break-word !important; 
+      vertical-align: middle;
+    }
+    .row-letter th { font-size: 11px; font-weight: 900; background: #f0f0f0; height: 22px; z-index: 5; white-space: nowrap !important; }
+    .row-name th { font-size: 9.5px; font-weight: 800; background: #ffffff; text-transform: uppercase; z-index: 5; }
+    
+    tbody tr { height: 10px; cursor: pointer; }
+    tbody tr:hover { background-color: #f1f7ff; }
+    
+    tbody tr.selected-row { background-color: #2980b9 !important; color: #ffffff !important; }
+    tbody tr.selected-row td { color: #ffffff !important; border-color: #154360 !important; background-color: #2980b9 !important; }
+
+    tbody tr.grand-total-row { background-color: #ffffff !important; font-weight: 900 !important; }
+    .td-merged-gtotal {
+      text-align: right !important;
+      font-weight: 900 !important;
+      background-color: #fff3cd !important;
+      color: #000 !important;
+      padding-right: 12px;
+    }
+    .td-gtotal-amount {
+      text-align: center !important;
+      font-weight: 900 !important;
+      color: #c0392b !important;
+      background-color: #fff3cd !important;
+    }
+    tbody td { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    th:nth-child(1), td:nth-child(1) { position: sticky; left: 0; z-index: 6; background-color: #ffffff; width: 45px; min-width: 45px; border-right: 1px solid #000000 !important; }
+    th:nth-child(2), td:nth-child(2) { position: sticky; left: 45px; z-index: 6; background-color: #ffffff; width: 65px; min-width: 65px; border-right: 1px solid #000000 !important; }
+    th:nth-child(3), td:nth-child(3) { position: sticky; left: 110px; z-index: 6; background-color: #ffffff; width: 90px; min-width: 90px; border-right: 2px solid #000000 !important; }
+
+    th:nth-child(4), td:nth-child(4) { width: 210px !important; min-width: 190px !important; max-width: 260px !important; }
+    th:nth-child(5), td:nth-child(5) { width: 210px !important; min-width: 190px !important; max-width: 260px !important; }
+    th:nth-child(38), td:nth-child(38) { width: 55px !important; min-width: 55px !important; max-width: 60px !important; text-align: center !important; }
+
+    .table-absent-circle {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      border: 2px solid #dc3545;
+      border-radius: 50%;
+      color: #dc3545;
+      background-color: #f8d7da;
+      font-weight: bold;
+    }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center; }
+    .modal-window { background: #ffffff; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { background: #2b579a; color: white; padding: 10px 16px; font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .btn-modal { padding: 6px 14px; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; }
+
+    .edit-tabs { display: flex; background: #eef2f7; border-bottom: 1px solid #ccc; }
+    .edit-tab-btn { flex: 1; padding: 10px; font-weight: bold; font-size: 12px; background: none; border: none; cursor: pointer; text-align: center; }
+    .edit-tab-btn.active { background: #fff; border-bottom: 3px solid #2b579a; color: #2b579a; }
+
+    .edit-grid { padding: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; overflow-y: auto; max-height: 50vh; background: #f8f9fa; }
+    .form-group { display: flex; flex-direction: column; gap: 3px; }
+    .form-group label { font-size: 11px; font-weight: bold; }
+    .form-group input, .form-group select, .form-group textarea { padding: 5px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
+    .cal-day-cell { border: 1.5px solid #ccc; border-radius: 4px; padding: 8px 4px; cursor: pointer; font-weight: bold; font-size: 11.5px; background: #f8f9fa; text-align: center; user-select: none; }
+    .cal-day-cell.absent { 
+      background: #f8d7da; border: 2.5px solid #dc3545; border-radius: 50%; color: #dc3545; 
+      width: 48px; height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto; 
+    }
+
+    .code-by-grid { display: flex; gap: 12px; padding: 16px; height: 440px; background: #f8f9fa; }
+    .code-by-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .code-by-col label { font-size: 11px; font-weight: bold; color: #333; }
+    .code-by-col textarea { flex: 1; padding: 8px; font-family: monospace; font-size: 12px; border: 1.5px solid #ccc; border-radius: 4px; resize: none; outline: none; line-height: 19.5px; }
+    .name-preview-box { flex: 1; padding: 8px; background: #ffffff; border: 1.5px solid #ccc; border-radius: 4px; overflow-y: auto; font-size: 11.5px; font-weight: bold; color: #2b579a; line-height: 19.5px; }
+
+    #alertToast { position: fixed; top: 20px; right: 20px; background: #27ae60; color: #ffffff; padding: 10px 18px; border-radius: 4px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; display: none; }
+    #alertToast.error { background: #c0392b; }
+    
+    .sunday-merged {
+      color: red !important; font-weight: bold; text-align: center; vertical-align: middle;
+      writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 2px; background-color: #ffffff;
+    }
+
+    .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 4px; background: #e0e0e0; font-weight: bold; font-size: 12px; }
+    .pagination-bar button { padding: 2px 8px; cursor: pointer; font-weight: bold; }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #screenDLR, #screenDLR * {
+        visibility: visible;
+      }
+      #screenDLR {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #fff !important;
+        display: flex !important;
+        flex-direction: column;
+      }
+      #screenDLR > div:first-child {
+        display: none !important;
+      }
+      #dlrReportContent {
+        padding: 0 !important;
+        background: #fff !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="alertToast">Success Message</div>
+
+  <!-- MAIN PAYMENT WORKSPACE SCREEN -->
+  <div id="screen2">
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <div class="btn-add-mr" id="btnAddMrTab" onclick="openMRModal()">ADD MR +</div>
+        <div id="mrTabsContainer" style="display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+      <div class="sidebar-bottom">
+        <button class="btn-sidebar-fn btn-dlr-sidebar" onclick="openDLRWindow()">📌 DLR</button>
+        <button class="btn-sidebar-fn" onclick="openCodeByModal()">CODE BY</button>
+        <button class="btn-sidebar-fn" onclick="openDaysModal()">DAYS</button>
+      </div>
+    </div>
+
+    <div class="workspace-main">
+      <div class="main-banner" id="mainBanner">PLEASE CREATE / SELECT AN MR SHEET</div>
+      <div class="search-row">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" id="nameSearch" list="nameOptions" placeholder="Search NAME..." oninput="onNameSearchInput(this.value)" style="height:20px; padding:2px; border:1px solid #ccc; border-radius:4px; width:150px;">
+          <datalist id="nameOptions"></datalist>
+          
+          <button class="btn-action" style="background:#e67e22; font-weight:900;" onclick="openFindModal()">🔍 FIND</button>
+          <button class="btn-action btn-undo-redo" onclick="undoAction()" title="Undo">↩️</button>
+          <button class="btn-action btn-undo-redo" onclick="redoAction()" title="Redo">↪️</button>
+          <button class="btn-page-total" onclick="openPageTotalModal()">Page-Total</button>
+          
+          <div style="display:flex; gap:3px; margin-left:4px;">
+            <button class="btn-view-toggle active-view" id="btnView1" onclick="switchTableView(1)">View 1</button>
+            <button class="btn-view-toggle" id="btnView2" onclick="switchTableView(2)">View 2</button>
+          </div>
+
+          <div class="rs-total-box" onclick="insertGrandTotalRow()" title="Click to insert/update G/TOTAL row">
+            Rs <span id="grandTotalDisplay">0</span>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-action btn-edit" id="btnEditRow" onclick="openEditModal()">✏️ EDIT INDL</button>
+          
+          <div class="dropdown">
+            <button class="btn-action" style="background:#d35400; font-weight:900;" onclick="checkExcelImportAccess(event)">⚙️ OPTIONS ▾</button>
+            <div class="dropdown-content">
+              <input type="file" id="excelImportFile" accept=".xlsx, .xls" style="display:none;" onchange="handleExcelImport(event)">
+              <button onclick="checkAndTriggerExcelImport()">📁 Import Excel</button>
+              <button onclick="exportTableToExcel()">📥 Export to Excel</button>
+              <button onclick="deleteActiveMR()" style="color:#c0392b;">🗑️ Delete MR</button>
+              <button onclick="changeRowFontColorModal()">🎨 Row Font Colour Changed</button>
+              <button onclick="changeRowHighlightColorModal()">🖌️ Row Highlight Colour Changed</button>
+            </div>
+          </div>
+
+          <button class="btn-action btn-goto-home" onclick="goToHome()">🏠 HOME</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr class="row-letter" id="letterHead"></tr>
+            <tr class="row-name" id="nameHead"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar" id="paginationBar"></div>
+    </div>
+  </div>
+
+  <!-- DLR REPORT WINDOW (SEPARATE VIEW) -->
+  <div id="screenDLR" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fff; z-index:500; flex-direction:column;">
+    <div style="background:#2b579a; color:#fff; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="font-size:16px;">DAILY LABOUR REPORT (DLR SUMMARY)</h3>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-modal" style="background:#d35400; color:#fff;" onclick="toggleDLREditMode()">✏️ Edit Fields</button>
+        <button class="btn-modal" style="background:#27ae60; color:#fff;" onclick="window.print()">🖨️ Print</button>
+        <button class="btn-modal" style="background:#e67e22; color:#fff;" onclick="exportDLRToExcel()">📥 Excel Export</button>
+        <button class="btn-modal" style="background:#2980b9; color:#fff;" onclick="closeDLRWindow()">🔙 Go To Payment</button>
+      </div>
+    </div>
+    <div id="dlrReportContent" style="flex:1; overflow:auto; padding:20px; background:#f4f4f4;">
+    </div>
+  </div>
+
+  <!-- DLR EDIT FIELDS MODAL FORM WITH HIGH Z-INDEX -->
+  <div class="modal-overlay" id="dlrEditModal" style="z-index: 600;">
+    <div class="modal-window" style="width: 500px; padding: 20px; gap: 12px;">
+      <h3 style="color:#2b579a; text-align:center;">EDIT DLR HEADERS & SIGNATURES</h3>
+      <div style="display:flex; flex-direction:column; gap:8px; max-height:60vh; overflow-y:auto; padding-right:4px;">
+        <div class="form-group"><label>Top Section:</label><input type="text" id="dlrInputSection"></div>
+        <div class="form-group"><label>HQ Name:</label><input type="text" id="dlrInputHq"></div>
+        <div class="form-group"><label>Right Top Details:</label><textarea id="dlrInputDett" rows="3"></textarea></div>
+        <div class="form-group"><label>MR No Text:</label><input type="text" id="dlrInputMrNo"></div>
+        <div class="form-group"><label>Job No Text:</label><input type="text" id="dlrInputJobNo"></div>
+        <div class="form-group"><label>C/s Text:</label><input type="text" id="dlrInputCs"></div>
+        <div class="form-group"><label>I/C Work's Text:</label><textarea id="dlrInputIc" rows="2"></textarea></div>
+        <div class="form-group"><label>OIC Text:</label><textarea id="dlrInputOic" rows="3"></textarea></div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button class="btn-modal" style="background:#888; color:#fff;" onclick="closeModal('dlrEditModal')">CANCEL</button>
+        <button class="btn-modal" style="background:#27ae60; color:#fff;" onclick="saveDLREditModal()">SAVE & APPLY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="customConfirmModal">
+    <div class="modal-window" style="width: 420px; padding: 20px; gap: 14px; text-align: center;">
+      <h3 style="color:#2b579a; font-size:16px;">CONFIRMATION</h3>
+      <p id="customConfirmText" style="font-size: 13px; font-weight: bold; color: #333; line-height: 1.4;">Are you sure?</p>
+      <div style="display:flex; justify-content:center; gap:10px; margin-top:6px;">
+        <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeCustomConfirm(false)">NO</button>
+        <button class="btn-modal" style="background:#007e33; color:#fff;" onclick="closeCustomConfirm(true)">YES</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="searchEmpModal">
+    <div class="modal-window" style="width: 440px; padding: 20px; gap: 12px;">
+      <h3 style="color:#2b579a; text-align:center;">EMPLOYEE DETAILS</h3>
+      <div id="searchEmpContent" style="font-size: 12px; line-height: 1.6; background: #f8f9fa; padding: 12px; border: 1px solid #ccc; border-radius: 4px;"></div>
+      <div style="display:flex; justify-content:space-between; gap:10px; margin-top:4px;">
+        <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeModal('searchEmpModal')">CLOSE</button>
+        <button class="btn-modal" id="btnAddSearchedData" style="background:#27ae60; color:#fff;" onclick="addSearchedEmployeeToSheet()">➕ ADD DATA</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="mrModal">
+    <div class="modal-window" style="width: 400px; padding: 20px; gap: 12px;">
+      <h3 style="color:#2b579a; text-align:center;">CREATE NEW MR SHEET</h3>
+      <input type="text" id="modalMrNo" value="MR No. 74 RCC/ /SEP 2026" style="width:100%; height:32px; padding:4px;">
+      <select id="modalJobSelect" style="width:100%; height:32px;">
+        <option value="ADG (B)/ BFR Cell/ (A/A & E/S) / 2024/832 FMN">JOB No. ADG (B)/ BFR Cell/ (A/A & E/S) / 2024/832 FMN</option>
+        <option value="MAINT CHK ROAD (2026-24) KM 0.00 TO 10.00">JOB No. MAINT CHK ROAD (2026-24) KM 0.00 TO 10.00</option>        
+        <option value="80/515 (PSK)">JOB No. 80/515 (PSK)</option>
+      </select>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeModal('mrModal')">CANCEL</button>
+        <button class="btn-modal" style="background:#007e33; color:#fff;" onclick="confirmAddMR()">CREATE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="codeByModal">
+    <div class="modal-window" style="width: 640px;">
+      <div class="modal-header">
+        <span>BULK IMPORT BY CODES</span>
+        <span style="cursor:pointer;" onclick="closeModal('codeByModal')">✖</span>
+      </div>
+      <div style="padding: 10px 16px 0 16px; background: #f8f9fa;">
+        <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:3px;">START S/NO (Optional):</label>
+        <input type="number" id="codeStartNo" value="" placeholder="e.g. 5" oninput="previewBulkCodes()" style="width:100%; height:30px; padding:4px 8px; border:1.5px solid #ccc; border-radius:4px;">
+      </div>
+      <div class="code-by-grid">
+        <div class="code-by-col">
+          <label>PASTE CODES (COLUMN B):</label>
+          <textarea id="bulkCodeInput" placeholder="Paste codes here (one per line)..." oninput="previewBulkCodes()"></textarea>
+        </div>
+        <div class="code-by-col">
+          <label>MATCHED NAMES & DUPLICATE CHECK:</label>
+          <div class="name-preview-box" id="bulkNamePreview">
+            <i>Names will appear here as you paste codes...</i>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 12px 16px; background:#fff; border-top:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
+        <span id="bulkDuplicateWarning" style="color:#c0392b; font-size:11px; font-weight:bold;"></span>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-modal" style="background:#888; color:white;" onclick="closeModal('codeByModal')">CANCEL</button>
+          <button class="btn-modal" id="btnApplyBulk" style="background:#27ae60; color:white;" onclick="applyBulkCodes()">➕ ADD ALL TO SHEET</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="daysModal">
+    <div class="modal-window" style="width: 520px;">
+      <div class="modal-header">
+        <span>BULK PASTE WORKING DAYS (COL AL)</span>
+        <span style="cursor:pointer;" onclick="closeModal('daysModal')">✖</span>
+      </div>
+      <div style="padding:16px; background:#f8f9fa; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label style="font-size:11px; font-weight:bold;">FROM S/NO:</label>
+            <input type="number" id="daysStartNo" value="1" oninput="updateDaysHelper(); previewBulkDays();" style="width:100%; height:30px; padding:4px 8px; border:1.5px solid #ccc; border-radius:4px;">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:11px; font-weight:bold;">TO S/NO:</label>
+            <input type="number" id="daysEndNo" value="20" oninput="updateDaysHelper()" style="width:100%; height:30px; padding:4px 8px; border:1.5px solid #ccc; border-radius:4px;">
+          </div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+            <label style="font-size:11px; font-weight:bold;">PASTE DAYS (Line by line or Comma separated):</label>
+            <span id="daysRangeHelper" style="font-size: 10.5px; font-weight: bold; color: #2b579a; background: #eef2f7; padding: 2px 6px; border-radius: 3px;">Target: S/No 1 to 20</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <div id="daysSNoList" style="width: 45px; background: #fff; border: 1.5px solid #ccc; border-radius: 4px; padding: 8px 2px; font-family: monospace; font-size: 13px; color: #666; text-align: right; line-height: 19.5px; height: 380px; overflow: hidden; user-select: none;">
+              1.
+            </div>
+            <textarea id="bulkDaysInput" placeholder="31&#10;31&#10;25&#10;28&#10;..." oninput="previewBulkDays()" onscroll="document.getElementById('daysSNoList').scrollTop = this.scrollTop;" style="flex: 1; height: 380px; padding: 8px; font-size: 13px; font-family: monospace; line-height: 19.5px; border: 1.5px solid #ccc; border-radius: 4px; outline: none; resize: vertical;"></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 10px 16px; background:#fff; border-top:1px solid #ddd; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn-modal" style="background:#888; color:white;" onclick="closeModal('daysModal')">CANCEL</button>
+        <button class="btn-modal" style="background:#2b579a; color:white;" onclick="applyBulkDays()">APPLY TO COL AL</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-window" style="width: 92%; max-width: 1000px;">
+      <div class="modal-header">
+        <span id="editModalTitle">EDIT EMPLOYEE RECORD</span>
+        <span style="cursor:pointer;" onclick="closeModal('editModal')">✖</span>
+      </div>
+      
+      <div id="editEmpInfoBar" style="background: #eef2f7; padding: 8px 16px; border-bottom: 1px solid #ccc; font-size: 12px; font-weight: bold; color: #153465; display: flex; gap: 15px; flex-wrap: wrap;">
+      </div>
+
+      <div class="edit-tabs">
+        <button class="edit-tab-btn active" id="tabBtnDetails" onclick="switchEditTab('details')">📋 Employee Details</button>
+        <button class="edit-tab-btn" id="tabBtnCalendar" onclick="switchEditTab('calendar')">📅 Attendance Calendar (21 Aug - 20 Sep)</button>
+      </div>
+      <div id="editDetailsView" class="edit-grid"></div>
+      <div id="editCalendarView" style="display:none; padding:16px; background:#fff; max-height:50vh; overflow-y:auto; text-align:center;"></div>
+
+      <div style="padding: 10px 16px; background:#fff; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #ccc;">
+        <div style="display:flex; gap:6px;">
+          <button class="btn-modal" style="background:#dc3545; color:white;" onclick="deleteCurrentRow()">🗑️ DELETE</button>
+          <button class="btn-modal" style="background:#6c757d; color:white;" onclick="navigateEmployee(-1)">⬅️ Prev</button>
+          <button class="btn-modal" style="background:#6c757d; color:white;" onclick="navigateEmployee(1)">Next ➡️</button>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-modal" style="background:#34495e; color:white;" onclick="insertBlankRowBelow()">➕ INSERT BLANK</button>
+          <button class="btn-modal" style="background:#888;" onclick="closeModal('editModal')">CANCEL</button>
+          <button class="btn-modal" style="background:#27ae60; color:white;" onclick="saveEditedData()">UPDATE & APPLY</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let masterData = [];
+    let masterHeaders = [
+      "Sl.No.",                       // 0
+      "Code No.",                     // 1
+      "Designation",                  // 2
+      "Name\n(in Capital Letters)",     // 3
+      "Father's/Husband's Name\n(in Capital letters)", // 4
+      "Gender",                       // 5
+      "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", // 6 to 16
+      "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
+      "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", // 17 to 36
+      "Total days worked",            // 37
+      "Rate of\nwages",               // 38
+      "Net\nAmt",                     // 39
+      "BANK A/C NO",                  // 40
+      "IFS CODE",                     // 41
+      "Date of Enrolment",            // 42
+      "Date of Discharge"             // 43
+    ];
+
+    let mrSheets = [];
+    let currentMRIndex = 0;
+    let currentPage = 1;
+    const rowsPerPage = 20;
+    let selectedRowIdx = 0;
+    let activePeriod = localStorage.getItem("CPL_GLOBAL_MONTH") || "SEP 2026";
+    let pendingConfirmAction = null;
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_UNDO = 5;
+    let currentTableViewMode = 1;
+    let activeEditTabMode = 'details';
+
+    let dlrCustomValues = {
+      section: "E2 Section",
+      hq: "HQ 74 RCC (GREF)",
+      dettTop: "Dett: N-V-T\n405 RMPL\n74 RCC (GREF)",
+      mrNoText: "",
+      jobNoText: "",
+      csText: "C/s",
+      icWorksText: "I/C Work's\nMaint Cell 74 RCC",
+      oicText: "OIC ,AE (Civ)\nMaint Cell 74 RCC \n403 RMPL (GREF)"
+    };
+
+    function showAlert(message, isError = false) {
+      const toast = document.getElementById("alertToast");
+      toast.innerText = message;
+      toast.className = isError ? "error" : "";
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
+    }
+
+    function calculateRateByTrade(tradeVal) {
+      if (!tradeVal) return "550";
+      const t = String(tradeVal).trim().toUpperCase();
+      if (t.includes("MAZ")) return "550";
+      if (t.includes("MATE")) return "570";
+      if (t.includes("SKD-III")) return "640";
+      if (t.includes("SKD-II")) return "770";
+      if (t.includes("SKD-I")) return "900";
+      if (t.includes("CPDVR")) return "770";
+      return "550";
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedMonth = localStorage.getItem("CPL_GLOBAL_MONTH");
+      if (savedMonth) activePeriod = savedMonth;
+
+      const localData = localStorage.getItem(`CPL_OFFLINE_SHEETS_${activePeriod}`);
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          if (parsed.mrSheets && parsed.mrSheets.length > 0) {
+            mrSheets = parsed.mrSheets;
+            currentMRIndex = parsed.lastIndex || 0;
+          }
+        } catch(e) {}
+      }
+
+      fetch('/api/master-data')
+        .then(res => res.json())
+        .then(res => {
+          if (res.data) {
+            masterData = res.data;
+            populateDatalists();
+          }
+        })
+        .catch(e => {});
+
+      renderHeaders();
+      if (mrSheets.length > 0) {
+        renderTabs();
+        renderBody();
+      } else {
+        openMRModal();
+      }
+    });
+
+    function switchTableView(viewNum) {
+      currentTableViewMode = viewNum;
+      document.getElementById("btnView1").className = `btn-view-toggle ${viewNum === 1 ? 'active-view' : ''}`;
+      document.getElementById("btnView2").className = `btn-view-toggle ${viewNum === 2 ? 'active-view' : ''}`;
+      renderHeaders();
+      renderBody();
+    }
+
+    function populateDatalists() {
+      const nameDl = document.getElementById("nameOptions");
+      nameDl.innerHTML = "";
+      masterData.forEach(item => {
+        if (item.name) {
+          const opt = document.createElement("option");
+          opt.value = item.name;
+          nameDl.appendChild(opt);
+        }
+      });
+    }
+
+    let selectedSearchedEmp = null;
+
+    function onNameSearchInput(val) {
+      const query = val.trim().toLowerCase();
+      if (!query) return;
+
+      const matchedEmp = masterData.find(d => (d.name || '').toLowerCase() === query);
+      if (matchedEmp) {
+        document.getElementById("nameSearch").value = "";
+        selectedSearchedEmp = matchedEmp;
+
+        const code = matchedEmp.code || matchedEmp.rowData[1] || '';
+        const name = matchedEmp.name || matchedEmp.rowData[3] || '';
+        const father = matchedEmp.fatherName || matchedEmp.rowData[4] || '';
+        const account = matchedEmp.accountNo || matchedEmp.rowData[15] || '';
+        const recruitmentDate = matchedEmp.enrolmentDate || matchedEmp.rowData[22] || '';
+
+        let duplicateFound = false;
+        let duplicateInfoText = "No (Not in any MR)";
+        
+        mrSheets.forEach(mr => {
+          if (mr.rows) {
+            mr.rows.forEach((r, rIdx) => {
+              if (!r.isGrandTotal) {
+                const rCode = String(r.code || r.rowData[1] || '').trim().toLowerCase();
+                const rName = String(r.name || r.rowData[3] || '').trim().toLowerCase();
+                if ((code && rCode === code.toLowerCase()) || (name && rName === name.toLowerCase())) {
+                  duplicateFound = true;
+                  duplicateInfoText = `Yes! Found in Sheet: <strong>${mr.label}</strong> at S/No: <strong>${rIdx + 1}</strong>`;
+                }
+              }
+            });
+          }
+        });
+
+        const contentBox = document.getElementById("searchEmpContent");
+        const addBtn = document.getElementById("btnAddSearchedData");
+
+        let duplicateHtmlColor = duplicateFound ? "#c0392b" : "#007e33";
+        contentBox.innerHTML = `
+          <div><strong>Code:</strong> <span style="color: #007e33; font-weight: 900; font-size: 13px;">${code}</span></div>
+          <div><strong>Name:</strong> <span style="color: #007e33; font-weight: 900;">${name}</span></div>
+          <div><strong>Father's Name:</strong> <span style="color: #007e33; font-weight: 900;">${father}</span></div>
+          <div><strong>Account No:</strong> <span style="color: #007e33; font-weight: 900;">${account}</span></div>
+          <div><strong>Date of Recruitment:</strong> <span style="color: #007e33; font-weight: 900;">${recruitmentDate}</span></div>
+          <hr style="margin: 8px 0; border: 0; border-top: 1px solid #ccc;">
+          <div><strong>Duplicate Status:</strong> <span style="color: ${duplicateHtmlColor}; font-weight: 900;">${duplicateInfoText}</span></div>
+        `;
+        if (addBtn) addBtn.style.display = "block";
+
+        document.getElementById("searchEmpModal").style.display = "flex";
+      }
+    }
+
+    function addSearchedEmployeeToSheet() {
+      if (!selectedSearchedEmp) { closeModal('searchEmpModal'); return; }
+      pushUndoState();
+      const found = selectedSearchedEmp;
+      const totalCols = masterHeaders.length;
+      const rowCopy = new Array(totalCols).fill('');
+      rowCopy[1] = found.code;
+      rowCopy[2] = found.designation || 'MAZ';
+      rowCopy[3] = found.name;
+      rowCopy[4] = found.fatherName;
+      rowCopy[5] = found.gender || 'MALE';
+      
+      const sundayDays = ["23", "30", "6", "13", "20"];
+
+      for (let i = 6; i <= 36; i++) {
+        let dayHeader = masterHeaders[i];
+        if (sundayDays.includes(dayHeader)) {
+          rowCopy[i] = "SUNDAY";
+        } else {
+          rowCopy[i] = "P";
+        }
+      }
+      
+      rowCopy[37] = String(calculateCorrectWorkingDays({ rowData: rowCopy }));
+      rowCopy[38] = calculateRateByTrade(rowCopy[2]);
+      rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
+      
+      rowCopy[40] = found.accountNo;
+      rowCopy[41] = found.ifsCode;
+      rowCopy[42] = found.enrolmentDate;
+      rowCopy[43] = "21-Aug-2026";
+
+      const newObj = { code: found.code, name: found.name, rowData: rowCopy };
+      if (!mrSheets[currentMRIndex].rows) mrSheets[currentMRIndex].rows = [];
+      mrSheets[currentMRIndex].rows.push(newObj);
+
+      closeModal('searchEmpModal');
+      currentPage = Math.ceil(mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal).length / rowsPerPage);
+      renderBody(); saveToLocal(true);
+      showAlert(`Employee ${found.name} added successfully!`);
+      selectedSearchedEmp = null;
+    }
+
+    function checkExcelImportAccess(e) {}
+    function checkAndTriggerExcelImport() { document.getElementById('excelImportFile').click(); }
+
+    // DLR WINDOW FUNCTIONS
+    function openDLRWindow() {
+      if (mrSheets.length === 0) {
+        showAlert("Please create or select an MR sheet first!", true);
+        return;
+      }
+      const curMR = mrSheets[currentMRIndex];
+      if (!dlrCustomValues.mrNoText) dlrCustomValues.mrNoText = curMR.title.split(',')[0] || "MR No. 74 RCC/ /SEP 2026";
+      if (!dlrCustomValues.jobNoText) dlrCustomValues.jobNoText = curMR.title.split(',')[1] || "JOB NO - MAINT. NVTRD";
+
+      renderDLRContent();
+      document.getElementById("screenDLR").style.display = "flex";
+    }
+
+    function closeDLRWindow() {
+      document.getElementById("screenDLR").style.display = "none";
+    }
+
+    function toggleDLREditMode() {
+      document.getElementById("dlrInputSection").value = dlrCustomValues.section;
+      document.getElementById("dlrInputHq").value = dlrCustomValues.hq;
+      document.getElementById("dlrInputDett").value = dlrCustomValues.dettTop;
+      document.getElementById("dlrInputMrNo").value = dlrCustomValues.mrNoText;
+      document.getElementById("dlrInputJobNo").value = dlrCustomValues.jobNoText;
+      document.getElementById("dlrInputCs").value = dlrCustomValues.csText;
+      document.getElementById("dlrInputIc").value = dlrCustomValues.icWorksText;
+      document.getElementById("dlrInputOic").value = dlrCustomValues.oicText;
+
+      document.getElementById("dlrEditModal").style.display = "flex";
+    }
+
+    function saveDLREditModal() {
+      dlrCustomValues.section = document.getElementById("dlrInputSection").value;
+      dlrCustomValues.hq = document.getElementById("dlrInputHq").value;
+      dlrCustomValues.dettTop = document.getElementById("dlrInputDett").value;
+      dlrCustomValues.mrNoText = document.getElementById("dlrInputMrNo").value;
+      dlrCustomValues.jobNoText = document.getElementById("dlrInputJobNo").value;
+      dlrCustomValues.csText = document.getElementById("dlrInputCs").value;
+      dlrCustomValues.icWorksText = document.getElementById("dlrInputIc").value;
+      dlrCustomValues.oicText = document.getElementById("dlrInputOic").value;
+
+      closeModal("dlrEditModal");
+      renderDLRContent();
+      showAlert("DLR details updated successfully!");
+    }
+
+    function renderDLRContent() {
+      const curMR = mrSheets[currentMRIndex];
+      const rows = (curMR.rows || []).filter(r => !r.isGrandTotal);
+
+      const standardTrades = ["MATE", "SKD-I", "SKD-II", "SKD-III", "CPDVR", "MAZ"];
+      let activeTrades = [];
+
+      standardTrades.forEach(t => {
+        let count = rows.filter(r => {
+          let desig = String(r.rowData[2] || '').trim().toUpperCase();
+          return desig.includes(t);
+        }).length;
+        if (count > 0) activeTrades.push(t);
+      });
+
+      let container = document.getElementById("dlrReportContent");
+      let html = `
+        <div style="width: 190mm; min-height: 277mm; margin: 0 auto; background:#fff; padding: 10mm; border:1px solid #ccc; box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family: Arial, Helvetica, sans-serif; font-size: 10px;">
+          <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:6px;">
+            <div>${dlrCustomValues.section.replace(/\n/g, '<br>')}<br>${dlrCustomValues.hq}</div>
+            <div style="text-align:right;">${dlrCustomValues.dettTop.replace(/\n/g, '<br>')}</div>
+          </div>
+          <div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px; text-decoration:underline;">
+            SUMMARY OF DLR<br>(PD :- FROM 21 AUG 2026 TO 20 SEP 2026)
+          </div>
+          <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:8px;">
+            <div>MR No.:- ${dlrCustomValues.mrNoText}</div>
+            <div>JOB NO - ${dlrCustomValues.jobNoText}</div>
+          </div>
+
+          <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center; table-layout: fixed;">
+            <thead>
+              <tr style="background:#e0e0e0;">
+                <th rowspan="2" style="border:1px solid #000; padding:2px; width: 65px;">DATE</th>
+                <th colspan="${activeTrades.length + 1}" style="border:1px solid #000; padding:2px;">ON ROLL</th>
+                <th colspan="${activeTrades.length + 1}" style="border:1px solid #000; padding:2px;">PRESENT</th>
+              </tr>
+              <tr style="background:#f0f0f0;">
+      `;
+
+      activeTrades.forEach(t => { html += `<th style="border:1px solid #000; padding:2px;">${t}</th>`; });
+      html += `<th style="border:1px solid #000; padding:2px; background:#e8e8e8; width: 35px;">TOTAL</th>`;
+      activeTrades.forEach(t => { html += `<th style="border:1px solid #000; padding:2px;">${t}</th>`; });
+      html += `<th style="border:1px solid #000; padding:2px; background:#e8e8e8; width: 35px;">TOTAL</th>`;
+      html += `</tr></thead><tbody>`;
+
+      let onRollSums = new Array(activeTrades.length).fill(0);
+      let totalOnRollSum = 0;
+      let presentSums = new Array(activeTrades.length).fill(0);
+      let totalPresentSum = 0;
+
+      for (let i = 6; i <= 36; i++) {
+        let dayNum = masterHeaders[i];
+        let isSunday = ["23", "30", "6", "13", "20"].includes(dayNum);
+
+        let monthStr = (i <= 16) ? "Aug" : "Sep";
+        let formattedDate = `${dayNum}-${monthStr}-2026`;
+
+        html += `<tr>`;
+        html += `<td style="border:1px solid #000; font-weight:bold; padding:2px;">${formattedDate}</td>`;
+
+        if (isSunday) {
+          let colSpanTotal = (activeTrades.length + 1) * 2;
+          html += `<td colspan="${colSpanTotal}" style="border:1px solid #000; font-weight:bold; color:red; text-align:center; padding:3px;">SUNDAY</td>`;
+        } else {
+          // ON ROLL: Count ALL workers in that trade (including absent ones)
+          let totalOnRoll = 0;
+          activeTrades.forEach((t, tIdx) => {
+            let cnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t)).length;
+            onRollSums[tIdx] += cnt;
+            totalOnRoll += cnt;
+            html += `<td style="border:1px solid #000; padding:2px;">${cnt}</td>`;
+          });
+          totalOnRollSum += totalOnRoll;
+          html += `<td style="border:1px solid #000; font-weight:bold; padding:2px; background:#fafafa;">${totalOnRoll}</td>`;
+
+          // PRESENT: Count ONLY workers who are present ('P')
+          let totalPresent = 0;
+          activeTrades.forEach((t, tIdx) => {
+            let pCnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t) && r.rowData[i] === 'P').length;
+            presentSums[tIdx] += pCnt;
+            totalPresent += pCnt;
+            html += `<td style="border:1px solid #000; padding:2px;">${pCnt}</td>`;
+          });
+          totalPresentSum += totalPresent;
+          html += `<td style="border:1px solid #000; font-weight:bold; color:#c0392b; padding:2px; background:#fafafa;">${totalPresent}</td>`;
+        }
+        html += `</tr>`;
+      }
+
+      html += `<tr style="font-weight:bold; background:#f0f0f0;">`;
+      html += `<td style="border:1px solid #000; padding:2px;">TOTAL</td>`;
+      onRollSums.forEach((sum) => { html += `<td style="border:1px solid #000; padding:2px;">${sum}</td>`; });
+      html += `<td style="border:1px solid #000; padding:2px;">${totalOnRollSum}</td>`;
+      presentSums.forEach((sum) => { html += `<td style="border:1px solid #000; padding:2px;">${sum}</td>`; });
+      html += `<td style="border:1px solid #000; padding:2px; color:#c0392b;">${totalPresentSum}</td>`;
+      html += `</tr>`;
+
+      html += `</tbody></table>`;
+
+      // Signature section: C/s in center, I/C Work's on right, with proper gaps
+      html += `
+        <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; font-weight: bold; font-size: 10px; align-items: start;">
+          <div></div>
+          <div style="text-align: center; white-space: pre-line;">${dlrCustomValues.csText}</div>
+          <div style="text-align: right; white-space: pre-line; padding-right: 10px;">${dlrCustomValues.icWorksText}</div>
+        </div>
+        <div style="margin-top: 40px; text-align: center; font-weight: bold; font-size: 10px; white-space: pre-line; line-height: 1.4;">${dlrCustomValues.oicText}</div>
+      `;
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function exportDLRToExcel() {
+      const curMR = mrSheets[currentMRIndex];
+      const rows = (curMR.rows || []).filter(r => !r.isGrandTotal);
+
+      const standardTrades = ["MATE", "SKD-I", "SKD-II", "SKD-III", "CPDVR", "MAZ"];
+      let activeTrades = [];
+      standardTrades.forEach(t => {
+        let count = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t)).length;
+        if (count > 0) activeTrades.push(t);
+      });
+
+      let wsData = [
+        [dlrCustomValues.section, "", "", "", "", "", "", dlrCustomValues.dettTop.split('\n')[0]],
+        [dlrCustomValues.hq, "", "", "", "", "", "", dlrCustomValues.dettTop.split('\n')[1] || ""],
+        ["", "", "", "", "", "", "", dlrCustomValues.dettTop.split('\n')[2] || ""],
+        ["SUMMARY OF DLR"],
+        ["(PD :- FROM 21 AUG 2026 TO 20 SEP 2026)"],
+        [`MR No.:- ${dlrCustomValues.mrNoText}`, "", "", "", "", `JOB NO - ${dlrCustomValues.jobNoText}`],
+        [""]
+      ];
+
+      // Table Header Row 1 (ON ROLL aur PRESENT ke headers)
+      let h1 = ["DATE"];
+      activeTrades.forEach(() => h1.push(""));
+      h1.push("TOTAL");
+      activeTrades.forEach(() => h1.push(""));
+      h1.push("TOTAL");
+      wsData.push(h1);
+
+      // Table Header Row 2 (Trade names)
+      let h2 = [""];
+      activeTrades.forEach(t => h2.push(t));
+      h2.push("TOTAL");
+      activeTrades.forEach(t => h2.push(t));
+      h2.push("TOTAL");
+      wsData.push(h2);
+
+      let onRollSums = new Array(activeTrades.length).fill(0);
+      let totalOnRollSum = 0;
+      let presentSums = new Array(activeTrades.length).fill(0);
+      let totalPresentSum = 0;
+
+      // Data Rows (21-Aug se 20-Sep tak)
+      for (let i = 6; i <= 36; i++) {
+        let dayNum = masterHeaders[i];
+        let isSunday = ["23", "30", "6", "13", "20"].includes(dayNum);
+        let monthStr = (i <= 16) ? "Aug" : "Sep";
+        let formattedDate = `${dayNum}-${monthStr}-2026`;
+
+        let rowData = [formattedDate];
+        if (isSunday) {
+          rowData.push("SUNDAY");
+          for(let k = 0; k < (activeTrades.length * 2 + 1); k++) rowData.push("");
+        } else {
+          let tOnRollRow = 0;
+          activeTrades.forEach((t, tIdx) => {
+            let cnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t)).length;
+            onRollSums[tIdx] += cnt;
+            tOnRollRow += cnt;
+            rowData.push(cnt);
+          });
+          totalOnRollSum += tOnRollRow;
+          rowData.push(tOnRollRow);
+
+          let tPresRow = 0;
+          activeTrades.forEach((t, tIdx) => {
+            let pCnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t) && r.rowData[i] === 'P').length;
+            presentSums[tIdx] += pCnt;
+            tPresRow += pCnt;
+            rowData.push(pCnt);
+          });
+          totalPresentSum += tPresRow;
+          rowData.push(tPresRow);
+        }
+        wsData.push(rowData);
+      }
+
+      // TOTAL Row at the bottom of the table
+      let totalRow = ["TOTAL"];
+      onRollSums.forEach(sum => totalRow.push(sum));
+      totalRow.push(totalOnRollSum);
+      presentSums.forEach(sum => totalRow.push(sum));
+      totalRow.push(totalPresentSum);
+      wsData.push(totalRow);
+
+      // Spacing rows for Signatures
+      wsData.push([""]);
+      wsData.push([""]);
+
+      // Signature Rows (C/s, I/C Work's, OIC)
+      wsData.push(["", "", dlrCustomValues.csText, "", "", "", "", dlrCustomValues.icWorksText.replace(/\n/g, ' ')]);
+      wsData.push([""]);
+      
+      let oicLines = dlrCustomValues.oicText.split('\n');
+      oicLines.forEach(line => {
+        wsData.push(["", "", "", line]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Merges for headers
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: 5 } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: 5 } },
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DLR_Summary");
+      XLSX.writeFile(wb, `DLR_${curMR.label.replace(/\s+/g, '_')}.xlsx`);
+      showAlert("DLR exported to Excel successfully!");
+    }
+
+    function goToHome() {
+      pendingConfirmAction = () => {
+        localStorage.removeItem("CPL_IN_PAYMENT_SCREEN");
+        window.location.href = "/login.html";
+      };
+      document.getElementById("customConfirmText").innerText = "Are you sure you want to go to Home?";
+      document.getElementById("customConfirmModal").style.display = "flex";
+    }
+
+    function closeCustomConfirm(yes) {
+      document.getElementById("customConfirmModal").style.display = "none";
+      if (yes && pendingConfirmAction) pendingConfirmAction();
+      pendingConfirmAction = null;
+    }
+
+    function getColumnLetter(index) {
+      let letter = '';
+      while (index >= 0) {
+        letter = String.fromCharCode((index % 26) + 65) + letter;
+        index = Math.floor(index / 26) - 1;
+      }
+      return letter;
+    }
+
+    function renderHeaders() {
+      let r1 = "", r2 = "";
+      for (let i = 0; i < masterHeaders.length; i++) {
+        let displayStyle = (currentTableViewMode === 2 && i >= 6 && i <= 36) ? 'style="display:none;"' : '';
+        r1 += `<th ${displayStyle}>${getColumnLetter(i)}</th>`;
+        r2 += `<th ${displayStyle}>${(masterHeaders[i] || '').replace(/\n/g, '<br>')}</th>`;
+      }
+      document.getElementById("letterHead").innerHTML = r1;
+      document.getElementById("nameHead").innerHTML = r2;
+    }
+
+    function openMRModal() {
+      document.getElementById("modalMrNo").value = `MR No 74 RCC/ / ${activePeriod}`;
+      document.getElementById("mrModal").style.display = "flex";
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    
+    function openCodeByModal() {
+      if (mrSheets.length === 0) { showAlert("Please create an MR sheet first!", true); return; }
+      document.getElementById("bulkCodeInput").value = "";
+      document.getElementById("codeStartNo").value = "";
+      document.getElementById("bulkNamePreview").innerHTML = "<i>Names & Father's names will appear here as you paste codes...</i>";
+      document.getElementById("bulkDuplicateWarning").innerText = "";
+      document.getElementById("codeByModal").style.display = "flex";
+    }
+
+    function previewBulkCodes() {
+      const textarea = document.getElementById("bulkCodeInput");
+      if (!textarea) return;
+      const rawText = textarea.value;
+      const codes = rawText.split(/[\n,]+/).map(c => c.trim()).filter(c => c.length > 0);
+      const previewBox = document.getElementById("bulkNamePreview");
+      const warningBox = document.getElementById("bulkDuplicateWarning");
+      if (!previewBox) return;
+
+      if (codes.length === 0) {
+        previewBox.innerHTML = "<i>Names & Father's names will appear here as you paste codes...</i>";
+        if (warningBox) warningBox.innerText = "";
+        return;
+      }
+
+      const curRows = (mrSheets[currentMRIndex] && mrSheets[currentMRIndex].rows) ? mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal) : [];
+      let baseStartNo = curRows.length + 1;
+      const startNoInput = document.getElementById("codeStartNo");
+      if (startNoInput && startNoInput.value.trim() !== "") {
+        const parsed = parseInt(startNoInput.value.trim());
+        if (!isNaN(parsed) && parsed > 0) baseStartNo = parsed;
+      }
+
+      let html = "";
+      let duplicateMessages = [];
+
+      codes.forEach((code, idx) => {
+        const currentSNo = baseStartNo + idx;
+        const found = masterData.find(d => d.code.toLowerCase() === code.toLowerCase());
+        
+        if (found) {
+          const workerName = found.name || '';
+          let foundInMR = null;
+          mrSheets.forEach((mr) => {
+            (mr.rows || []).forEach((r) => {
+              if (!r.isGrandTotal) {
+                const rName = String(r.rowData[3] || r.name || '').trim().toLowerCase();
+                const rCode = String(r.rowData[1] || r.code || '').trim().toLowerCase();
+                if (rName === workerName.trim().toLowerCase() || (found.code && rCode === found.code.toLowerCase())) {
+                  foundInMR = mr.label;
+                }
+              }
+            });
+          });
+
+          if (foundInMR) {
+            duplicateMessages.push(`${workerName} already in ${foundInMR}`);
+            html += `<div style="height: 19.5px; line-height: 19.5px; color:#c0392b; font-weight:bold; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span style="color:#666; display:inline-block; width:22px; text-align:right;">${currentSNo}.</span> &nbsp;[DUPLICATE: ${workerName} in ${foundInMR}]</div>`;
+          } else {
+            const fatherName = found.fatherName || found.rowData[4] || '';
+            html += `<div style="height: 19.5px; line-height: 19.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px;"><span style="color:#666; font-weight:bold; display:inline-block; width:22px; text-align:right;">${currentSNo}.</span> &nbsp;<span style="color:#007e33; font-weight:bold; text-transform:uppercase;">${workerName}</span> &nbsp;&nbsp; <span style="color:#444;">${fatherName}</span></div>`;
+          }
+        } else {
+          html += `<div style="height: 19.5px; line-height: 19.5px; color:#dc3545; font-weight:bold; font-size: 11px;"><span style="color:#666; display:inline-block; width:22px; text-align:right;">${currentSNo}.</span> &nbsp;[NOT FOUND: ${code}]</div>`;
+        }
+      });
+
+      previewBox.innerHTML = html;
+      if (warningBox && duplicateMessages.length > 0) {
+        warningBox.innerText = `⚠️ Warning: Some codes/employees already exist in other MR sheets!`;
+      } else if (warningBox) {
+        warningBox.innerText = "";
+      }
+    }
+
+    function applyBulkCodes() {
+      const rawText = document.getElementById("bulkCodeInput").value;
+      const codes = rawText.split(/[\n,]+/).map(c => c.trim()).filter(c => c.length > 0);
+      const startNoInput = document.getElementById("codeStartNo").value.trim();
+      if (!mrSheets[currentMRIndex].rows) mrSheets[currentMRIndex].rows = [];
+      const curRows = mrSheets[currentMRIndex].rows;
+
+      let targetIndex = startNoInput !== "" ? parseInt(startNoInput) - 1 : curRows.length;
+      if (isNaN(targetIndex) || targetIndex < 0) targetIndex = curRows.length;
+
+      pushUndoState();
+      let addedCount = 0;
+
+      codes.forEach(code => {
+        const found = masterData.find(d => d.code.toLowerCase() === code.toLowerCase());
+        if (found) {
+          const dischargeVal = String(found.rowData[23] || '').trim();
+          if (dischargeVal === "") {
+            const totalCols = masterHeaders.length;
+            const rowCopy = new Array(totalCols).fill('');
+            rowCopy[1] = found.code;
+            rowCopy[2] = found.designation || 'MAZ';
+            rowCopy[3] = found.name;
+            rowCopy[4] = found.fatherName;
+            rowCopy[5] = found.gender || 'MALE';
+            
+            const sundayDays = ["23", "30", "6", "13", "20"];
+            for (let i = 6; i <= 36; i++) {
+              let dayHeader = masterHeaders[i];
+              if (sundayDays.includes(dayHeader)) {
+                rowCopy[i] = "SUNDAY";
+              } else {
+                rowCopy[i] = "P";
+              }
+            }
+            rowCopy[37] = String(calculateCorrectWorkingDays({ rowData: rowCopy }));
+            rowCopy[38] = calculateRateByTrade(rowCopy[2]);
+            rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
+            rowCopy[40] = found.accountNo;
+            rowCopy[41] = found.ifsCode;
+            rowCopy[42] = found.enrolmentDate;
+            rowCopy[43] = "21-Aug-2026";
+
+            const newObj = { code: found.code, name: found.name, rowData: rowCopy };
+            if (targetIndex < curRows.length) {
+              curRows.splice(targetIndex, 0, newObj);
+            } else {
+              curRows.push(newObj);
+            }
+            targetIndex++;
+            addedCount++;
+          }
+        }
+      });
+
+      closeModal("codeByModal");
+      renderBody(); saveToLocal(true);
+      showAlert(`${addedCount} employee(s) added successfully!`);
+    }
+
+    function openDaysModal() {
+      if (mrSheets.length === 0 || !mrSheets[currentMRIndex].rows || mrSheets[currentMRIndex].rows.length === 0) { 
+        showAlert("Current MR sheet has no rows!", true); 
+        return; 
+      }
+      document.getElementById("bulkDaysInput").value = "";
+      const curRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      document.getElementById("daysStartNo").value = 1;
+      document.getElementById("daysEndNo").value = Math.min(20, curRows.length);
+      document.getElementById("daysModal").style.display = "flex";
+      updateDaysHelper();
+      previewBulkDays();
+    }
+
+    function updateDaysHelper() {
+      const startNo = document.getElementById("daysStartNo").value || 1;
+      const endNo = document.getElementById("daysEndNo").value || 20;
+      const helper = document.getElementById("daysRangeHelper");
+      if (helper) helper.innerText = `Target: S/No ${startNo} to ${endNo}`;
+      previewBulkDays();
+    }
+
+    function previewBulkDays() {
+      const startNo = parseInt(document.getElementById("daysStartNo").value) || 1;
+      const rawText = document.getElementById("bulkDaysInput").value;
+      const daysList = rawText.split(/[\n,]+/).map(d => d.trim()).filter(d => d.length > 0);
+      const snoBox = document.getElementById("daysSNoList");
+      if (!snoBox) return;
+
+      let count = Math.max(daysList.length, 1);
+      let html = "";
+      for (let i = 0; i < count; i++) {
+        html += `<div style="height: 19.5px; line-height: 19.5px;">${startNo + i}.</div>`;
+      }
+      snoBox.innerHTML = html;
+    }
+
+    function applyBulkDays() {
+      const startNo = parseInt(document.getElementById("daysStartNo").value) || 1;
+      const endNo = parseInt(document.getElementById("daysEndNo").value) || 20;
+      const rawText = document.getElementById("bulkDaysInput").value;
+      const daysList = rawText.split(/[\n,]+/).map(d => d.trim()).filter(d => d.length > 0);
+      const curRowsData = mrSheets[currentMRIndex].rows;
+
+      if (daysList.length === 0) { showAlert("Please paste at least one day entry!", true); return; }
+      if (startNo > endNo || startNo < 1) { showAlert("Invalid S/No range!", true); return; }
+
+      pushUndoState();
+      let listIdx = 0;
+      for (let i = startNo - 1; i < Math.min(endNo, curRowsData.length); i++) {
+        if (!curRowsData[i].isGrandTotal && listIdx < daysList.length) {
+          const daysVal = daysList[listIdx++];
+          curRowsData[i].rowData[37] = daysVal;
+          if (!curRowsData[i].rowData[38]) curRowsData[i].rowData[38] = calculateRateByTrade(curRowsData[i].rowData[2]);
+          const rateVal = parseFloat(curRowsData[i].rowData[38]) || 550;
+          if (daysVal === "" || daysVal === null) {
+            curRowsData[i].rowData[39] = "0";
+          } else {
+            const daysNum = parseFloat(daysVal) || 0;
+            curRowsData[i].rowData[39] = String(daysNum * rateVal);
+          }
+        }
+      }
+
+      closeModal("daysModal");
+      renderBody(); saveToLocal(true);
+      showAlert("Working days applied successfully to Column AL!");
+    }
+
+    function confirmAddMR() {
+      const rawInput = document.getElementById("modalMrNo").value.trim();
+      const jobNo = document.getElementById("modalJobSelect").value;
+      const match = rawInput.match(/\/\s*(\d+)\s*\//);
+      const tabLabel = match ? `MR NO. ${match[1]}` : `MR NO. ${mrSheets.length + 1}`;
+
+      mrSheets.push({ label: tabLabel, title: `${rawInput}, JOB No. ${jobNo}`, rows: [] });
+      currentMRIndex = mrSheets.length - 1;
+      currentPage = 1;
+      closeModal("mrModal");
+      saveToLocal(true);
+      renderTabs(); renderBody();
+      showAlert("MR created successfully!");
+    }
+
+    function renderTabs() {
+      const container = document.getElementById("mrTabsContainer"); 
+      container.innerHTML = "";
+      mrSheets.forEach((mr, idx) => {
+        const tab = document.createElement("div");
+        tab.className = `btn-mr-tab ${idx === currentMRIndex ? 'active' : ''}`;
+        tab.innerText = mr.label;
+        tab.onclick = () => { currentMRIndex = idx; currentPage = 1; renderTabs(); renderBody(); };
+        container.appendChild(tab);
+      });
+      if (mrSheets[currentMRIndex]) {
+        document.getElementById("mainBanner").innerText = mrSheets[currentMRIndex].title;
+      }
+    }
+
+    function calculateCorrectWorkingDays(row) {
+      const weeks = [
+        [6, 7, 8, 9, 10, 11, 12],     
+        [13, 14, 15, 16, 17, 18, 19], 
+        [20, 21, 22, 23, 24, 25, 26], 
+        [27, 28, 29, 30, 31, 32, 33], 
+        [34, 35, 36]                  
+      ];
+
+      let totalDays = 0;
+
+      weeks.forEach(weekIndices => {
+        let hasAbsent = false;
+        weekIndices.forEach(idx => {
+          if (row.rowData[idx] === 'A') {
+            hasAbsent = true;
+          }
+        });
+
+        weekIndices.forEach(idx => {
+          let val = row.rowData[idx];
+          if (val === 'P') {
+            totalDays++;
+          } else if (val === 'SUNDAY') {
+            if (!hasAbsent) {
+              totalDays++;
+            }
+          }
+        });
+      });
+
+      return totalDays;
+    }
+
+    function renderBody() {
+      const tbody = document.getElementById("tableBody"); tbody.innerHTML = "";
+      if (mrSheets.length === 0) return;
+      const allRows = mrSheets[currentMRIndex].rows || [];
+      
+      const normalRows = allRows.filter(r => !r.isGrandTotal);
+      let grandTotal = 0;
+
+      normalRows.forEach((r, idx) => {
+        r.rowData[0] = idx + 1;
+        let calculatedDays = calculateCorrectWorkingDays(r);
+        r.rowData[37] = String(calculatedDays);
+
+        const rate = parseFloat(calculateRateByTrade(r.rowData[2])) || 550;
+        r.rowData[38] = String(rate);
+        r.rowData[39] = String(calculatedDays * rate);
+        grandTotal += parseFloat(r.rowData[39]) || 0;
+      });
+
+      const totalPages = Math.ceil(normalRows.length / rowsPerPage) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      const startIdx = (currentPage - 1) * rowsPerPage;
+      const paginatedRows = normalRows.slice(startIdx, startIdx + rowsPerPage);
+      const rowCount = paginatedRows.length;
+
+      paginatedRows.forEach((r, pIdx) => {
+        const actualIdx = startIdx + pIdx;
+        const tr = document.createElement("tr");
+        if (actualIdx === selectedRowIdx) tr.classList.add("selected-row");
+        tr.onclick = () => { selectedRowIdx = actualIdx; renderBody(); };
+
+        let html = "";
+        const totalCols = masterHeaders.length;
+        for (let c = 0; c < totalCols; c++) {
+          let displayStyle = (currentTableViewMode === 2 && c >= 6 && c <= 36) ? 'style="display:none;"' : '';
+          let val = r.rowData[c] || '';
+          
+          const sundayDays = ["23", "30", "6", "13", "20"];
+          let isSundayCol = sundayDays.includes(masterHeaders[c]);
+
+          if (isSundayCol) {
+            if (pIdx === 0) {
+              html += `<td rowspan="${rowCount}" class="sunday-merged" ${displayStyle} title="SUNDAY">SUNDAY</td>`;
+            } else if (currentTableViewMode === 2) {
+              html += `<td ${displayStyle}></td>`;
+            }
+            continue;
+          } else {
+            let cellStyle = 'font-weight: 600; white-space: nowrap;';
+            if (c >= 6 && c <= 36 && val === 'A') {
+              html += `<td ${displayStyle} style="text-align:center;" title="Absent"><span class="table-absent-circle">A</span></td>`;
+            } else {
+              html += `<td ${displayStyle} style="${cellStyle}" title="${val}">${val}</td>`;
+            }
+          }
+        }
+        tr.innerHTML = html; tbody.appendChild(tr);
+      });
+
+      if (totalPages === 0 || currentPage === totalPages) {
+        if (allRows.some(r => r.isGrandTotal) || normalRows.length > 0) {
+          const trG = document.createElement("tr");
+          trG.classList.add("grand-total-row");
+          let htmlG = "";
+          const totalCols = masterHeaders.length;
+          
+          for (let c = 0; c <= 36; c++) {
+            let displayStyle = (currentTableViewMode === 2 && c >= 6 && c <= 36) ? 'style="display:none;"' : '';
+            htmlG += `<td ${displayStyle}></td>`;
+          }
+          
+          htmlG += `<td colspan="2" class="td-merged-gtotal">G/TOTAL :</td>`;
+          htmlG += `<td class="td-gtotal-amount">${grandTotal}</td>`;
+          
+          for (let c = 40; c < totalCols; c++) {
+            htmlG += `<td></td>`;
+          }
+          
+          trG.innerHTML = htmlG;
+          tbody.appendChild(trG);
+        }
+      }
+
+      document.getElementById("grandTotalDisplay").innerText = Number(grandTotal).toLocaleString('en-IN');
+      renderPaginationControls(totalPages);
+    }
+
+    function renderPaginationControls(totalPages) {
+      const pBar = document.getElementById("paginationBar");
+      if (totalPages <= 1) {
+        pBar.innerHTML = `Showing all rows (Page 1 of 1)`;
+        return;
+      }
+      let html = `<button onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>◀ Prev</button>`;
+      html += `<span>Page ${currentPage} of ${totalPages} (Sl.No. ${(currentPage-1)*rowsPerPage + 1} - ${Math.min(currentPage*rowsPerPage, mrSheets[currentMRIndex].rows.filter(r=>!r.isGrandTotal).length)})</span>`;
+      html += `<button onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Next ▶</button>`;
+      pBar.innerHTML = html;
+    }
+
+    function changePage(dir) {
+      currentPage += dir;
+      renderBody();
+    }
+
+    function exportTableToExcel() {
+      if (mrSheets.length === 0) return showAlert("No MR sheet to export!", true);
+      const curMR = mrSheets[currentMRIndex];
+      const wsData = [];
+      
+      const hLetters = [];
+      for(let i=0; i<masterHeaders.length; i++) hLetters.push(getColumnLetter(i));
+      wsData.push(hLetters);
+      
+      const hNames = masterHeaders.map(h => h.replace(/\n/g, ' '));
+      wsData.push(hNames);
+
+      let gTotal = 0;
+      (curMR.rows || []).filter(r => !r.isGrandTotal).forEach((r, idx) => {
+        let rowCopy = [...r.rowData];
+        rowCopy[0] = idx + 1;
+        wsData.push(rowCopy);
+        gTotal += parseFloat(rowCopy[39]) || 0;
+      });
+
+      let gRow = new Array(masterHeaders.length).fill('');
+      gRow[39] = gTotal;
+      wsData.push(gRow);
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "MR_Payment");
+      XLSX.writeFile(wb, `${curMR.label.replace(/\s+/g, '_')}_Payment.xlsx`);
+      showAlert("Excel exported successfully!");
+    }
+
+    function pushUndoState() {
+      if (mrSheets.length === 0) return;
+      undoStack.push(JSON.parse(JSON.stringify(mrSheets)));
+      if (undoStack.length > MAX_UNDO) undoStack.shift();
+      redoStack = [];
+    }
+
+    function undoAction() {
+      if (undoStack.length === 0) { showAlert("No actions to undo!", true); return; }
+      redoStack.push(JSON.parse(JSON.stringify(mrSheets)));
+      mrSheets = undoStack.pop();
+      renderTabs(); renderBody(); saveToLocal(true); showAlert("Undo applied!");
+    }
+
+    function redoAction() {
+      if (redoStack.length === 0) { showAlert("No actions to redo!", true); return; }
+      undoStack.push(JSON.parse(JSON.stringify(mrSheets)));
+      mrSheets = redoStack.pop();
+      renderTabs(); renderBody(); saveToLocal(true); showAlert("Redo applied!");
+    }
+
+    function openFindModal() { showAlert("Find modal"); }
+    function changeRowFontColorModal() { showAlert("Font color"); }
+    function changeRowHighlightColorModal() { showAlert("Highlight color"); }
+
+    function deleteActiveMR() {
+      if (mrSheets.length === 0) return;
+      if (confirm("Delete MR?")) {
+        mrSheets.splice(currentMRIndex, 1);
+        currentMRIndex = Math.max(0, currentMRIndex - 1);
+        currentPage = 1;
+        saveToLocal(true); renderTabs(); renderBody(); showAlert("MR deleted!");
+      }
+    }
+
+    function handleExcelImport(e) {}
+    function saveToLocal(silent = false) {
+      localStorage.setItem(`CPL_OFFLINE_SHEETS_${activePeriod}`, JSON.stringify({ mrSheets: mrSheets, lastIndex: currentMRIndex }));
+      if (!silent) showAlert("Data saved!");
+    }
+
+    function insertGrandTotalRow() {
+      const curRows = mrSheets[currentMRIndex].rows;
+      if (!curRows || curRows.length === 0) return;
+      let sumAmt = 0;
+      curRows.forEach(r => { if (!r.isGrandTotal) sumAmt += parseFloat(r.rowData[39]) || 0; });
+      const totalCols = masterHeaders.length;
+      const gData = new Array(totalCols).fill('');
+      gData[39] = String(sumAmt);
+      curRows.push({ isGrandTotal: true, rowData: gData });
+      renderBody(); saveToLocal(true);
+      showAlert("Grand Total added!");
+    }
+
+    function openPageTotalModal() { showAlert("Page total"); }
+
+    // EDIT MODAL TABS & NAVIGATION
+    function switchEditTab(mode) {
+      activeEditTabMode = mode;
+      document.getElementById("tabBtnDetails").className = `edit-tab-btn ${mode === 'details' ? 'active' : ''}`;
+      document.getElementById("tabBtnCalendar").className = `edit-tab-btn ${mode === 'calendar' ? 'active' : ''}`;
+
+      document.getElementById("editDetailsView").style.display = mode === 'details' ? 'grid' : 'none';
+      document.getElementById("editCalendarView").style.display = mode === 'calendar' ? 'block' : 'none';
+
+      if (mode === 'details') renderEditDetailsView();
+      if (mode === 'calendar') renderAttendanceCalendar();
+    }
+
+    function updateEmpInfoBar() {
+      const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      const row = normalRows[selectedRowIdx];
+      if (!row) return;
+      
+      const code = row.rowData[1] || '';
+      const desig = row.rowData[2] || '';
+      const name = row.rowData[3] || '';
+      const father = row.rowData[4] || '';
+      const days = row.rowData[37] || '31';
+
+      const infoBar = document.getElementById("editEmpInfoBar");
+      infoBar.innerHTML = `
+        <span>S/No: <strong>${selectedRowIdx + 1}</strong></span>
+        <span>Code: <strong style="color:#007e33;">${code}</strong></span>
+        <span>Designation: <strong style="color:#007e33;">${desig}</strong></span>
+        <span>Name: <strong style="color:#007e33;">${name}</strong></span>
+        <span>Father's Name: <strong style="color:#007e33;">${father}</strong></span>
+        <span>Working Days: <strong style="color:#c0392b;">${days}</strong></span>
+      `;
+    }
+
+    function navigateEmployee(direction) {
+      const curRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      let newIdx = selectedRowIdx + direction;
+      if (newIdx >= 0 && newIdx < curRows.length) {
+        selectedRowIdx = newIdx;
+        updateEmpInfoBar();
+        if (activeEditTabMode === 'details') renderEditDetailsView();
+        if (activeEditTabMode === 'calendar') renderAttendanceCalendar();
+        document.getElementById("editModalTitle").innerText = `EDIT EMPLOYEE (S/No: ${selectedRowIdx + 1})`;
+      } else {
+        showAlert(direction > 0 ? "Yeh aakhri employee hai!" : "Yeh pehla employee hai!", true);
+      }
+    }
+
+    function openEditModal() {
+      const curRows = mrSheets[currentMRIndex]?.rows;
+      if (!curRows || curRows.length === 0) return showAlert("No rows to edit!", true);
+      activeEditTabMode = 'details';
+      switchEditTab('details');
+      updateEmpInfoBar();
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function renderEditDetailsView() {
+      updateEmpInfoBar();
+      const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      const row = normalRows[selectedRowIdx];
+      if (!row) return;
+      document.getElementById("editModalTitle").innerText = `EDIT EMPLOYEE (S/No: ${selectedRowIdx + 1})`;
+      const grid = document.getElementById("editDetailsView");
+      grid.innerHTML = "";
+
+      const editableIndices = [1, 2, 3, 4, 5, 40, 41, 42, 43];
+
+      editableIndices.forEach(i => {
+        const colLetter = getColumnLetter(i);
+        const colTitle = masterHeaders[i] || '';
+        const val = row.rowData[i] || '';
+        const div = document.createElement("div");
+        div.className = "form-group";
+
+        if (i === 5) {
+          div.innerHTML = `<label><strong>${colLetter}:</strong> ${colTitle}</label>
+            <select id="editField_${i}" style="height:30px;">
+              <option value="MALE" ${val === 'MALE' || val === 'M' ? 'selected' : ''}>MALE</option>
+              <option value="FEMALE" ${val === 'FEMALE' || val === 'F' ? 'selected' : ''}>FEMALE</option>
+            </select>`;
+        } else {
+          div.innerHTML = `<label><strong>${colLetter}:</strong> ${colTitle}</label><input type="text" id="editField_${i}" value="${val}" style="height:30px;">`;
+        }
+        grid.appendChild(div);
+      });
+    }
+
+    function renderAttendanceCalendar() {
+      updateEmpInfoBar();
+      const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      const row = normalRows[selectedRowIdx];
+      if (!row) return;
+      const calView = document.getElementById("editCalendarView");
+      
+      let html = `<div style="font-weight:bold; font-size:13px; margin-bottom:10px; color:#2b579a;">Attendance Calendar (21 Aug - 20 Sep) - Click day to toggle Present / Absent</div>`;
+      html += `<div class="cal-grid">`;
+
+      for (let i = 6; i <= 36; i++) {
+        let dayHeader = masterHeaders[i];
+        let val = row.rowData[i] || 'P';
+        let isAbsent = (val !== 'P' && val !== 'SUNDAY');
+        let cellClass = isAbsent ? 'cal-day-cell absent' : 'cal-day-cell';
+
+        html += `<div class="${cellClass}" onclick="toggleDayAttendance(${i})">Day ${dayHeader}<br><span style="font-size:11px; font-weight:900;">${val}</span></div>`;
+      }
+      html += `</div>`;
+      calView.innerHTML = html;
+    }
+
+    function toggleDayAttendance(colIndex) {
+      const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      const row = normalRows[selectedRowIdx];
+      if (!row) return;
+
+      let currentVal = row.rowData[colIndex];
+      if (currentVal === 'SUNDAY') return;
+
+      if (currentVal === 'P') {
+        row.rowData[colIndex] = 'A';
+      } else {
+        row.rowData[colIndex] = 'P';
+      }
+
+      let calculatedDays = calculateCorrectWorkingDays(row);
+      row.rowData[37] = String(calculatedDays);
+      const rate = parseFloat(row.rowData[38]) || 550;
+      row.rowData[39] = String(calculatedDays * rate);
+
+      renderAttendanceCalendar();
+      updateEmpInfoBar();
+    }
+
+    function saveEditedData() {
+      pushUndoState();
+      const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      const row = normalRows[selectedRowIdx];
+
+      const editableIndices = [1, 2, 3, 4, 5, 40, 41, 42, 43];
+      editableIndices.forEach(i => {
+        const input = document.getElementById(`editField_${i}`);
+        if (input) row.rowData[i] = input.value.trim();
+      });
+
+      row.rowData[38] = calculateRateByTrade(row.rowData[2]);
+      let calculatedDays = calculateCorrectWorkingDays(row);
+      row.rowData[37] = String(calculatedDays);
+      const rate = parseFloat(row.rowData[38]) || 550;
+      row.rowData[39] = String(calculatedDays * rate);
+
+      closeModal("editModal");
+      renderBody(); saveToLocal(true);
+      showAlert("Changes saved successfully!");
+    }
+
+    function deleteCurrentRow() {
+      const allRows = mrSheets[currentMRIndex].rows;
+      const normalRows = allRows.filter(r => !r.isGrandTotal);
+      if (normalRows.length <= 1) return showAlert("Cannot delete last data row!", true);
+      
+      const targetRow = normalRows[selectedRowIdx];
+      const actualIdx = allRows.indexOf(targetRow);
+      if (actualIdx > -1) allRows.splice(actualIdx, 1);
+
+      selectedRowIdx = Math.max(0, selectedRowIdx - 1);
+      closeModal("editModal"); renderBody(); saveToLocal(true); showAlert("Row deleted!");
+    }
+
+    function insertBlankRowBelow() {
+      pushUndoState();
+      const totalCols = masterHeaders.length;
+      const newRow = new Array(totalCols).fill("");
+      newRow[5] = "MALE";
+      newRow[37] = "31";
+      
+      const allRows = mrSheets[currentMRIndex].rows;
+      const normalRows = allRows.filter(r => !r.isGrandTotal);
+      const TheTargetRow = normalRows[selectedRowIdx];
+      const actualIdx = TheTargetRow ? allRows.indexOf(TheTargetRow) : allRows.length;
+
+      allRows.splice(actualIdx + 1, 0, { rowData: newRow });
+      selectedRowIdx++;
+      closeModal("editModal"); renderBody(); saveToLocal(true); showAlert("Blank row inserted!");
+    }
+  </script>
+</body>
+</html>
