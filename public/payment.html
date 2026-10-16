@@ -273,16 +273,19 @@
     </div>
   </div>
 
+  <!-- MODIFIED MR MODAL WITH MANUAL JOB NUMBER INPUT -->
   <div class="modal-overlay" id="mrModal">
     <div class="modal-window" style="width: 400px; padding: 20px; gap: 12px;">
       <h3 style="color:#2b579a; text-align:center;">CREATE NEW MR SHEET</h3>
-      <input type="text" id="modalMrNo" value="MR No. 74 RCC/ /SEP 2026" style="width:100%; height:32px; padding:4px;">
-      <select id="modalJobSelect" style="width:100%; height:32px;">
-        <option value="ADG (B)/ BFR Cell/ (A/A & E/S) / 2024/832 FMN">JOB No. ADG (B)/ BFR Cell/ (A/A & E/S) / 2024/832 FMN</option>
-        <option value="MAINT CHK ROAD (2026-24) KM 0.00 TO 10.00">JOB No. MAINT CHK ROAD (2026-24) KM 0.00 TO 10.00</option>        
-        <option value="80/515 (PSK)">JOB No. 80/515 (PSK)</option>
-      </select>
-      <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <div style="display:flex; flex-direction:column; gap:4px; text-align:left;">
+        <label style="font-size:11px; font-weight:bold;">MR No:</label>
+        <input type="text" id="modalMrNo" value="MR No. 74 RCC/ /SEP 2026" style="width:100%; height:32px; padding:4px;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px; text-align:left;">
+        <label style="font-size:11px; font-weight:bold;">JOB No:</label>
+        <input type="text" id="modalJobInput" value="WRITE JOB No. " placeholder="Enter Job No..." style="width:100%; height:32px; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11.5px;">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
         <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeModal('mrModal')">CANCEL</button>
         <button class="btn-modal" style="background:#007e33; color:#fff;" onclick="confirmAddMR()">CREATE</button>
       </div>
@@ -579,7 +582,7 @@
         if (sundayDays.includes(dayHeader)) {
           rowCopy[i] = "SUNDAY";
         } else {
-          rowCopy[i] = "P"; // Default to 'P' instead of '--'
+          rowCopy[i] = "P";
         }
       }
       
@@ -900,6 +903,7 @@
 
     function openMRModal() {
       document.getElementById("modalMrNo").value = `MR No 74 RCC/ / ${activePeriod}`;
+      document.getElementById("modalJobInput").value = "Job No.";
       document.getElementById("mrModal").style.display = "flex";
     }
 
@@ -1009,7 +1013,7 @@
             if (sundayDays.includes(dayHeader)) {
               rowCopy[i] = "SUNDAY";
             } else {
-              rowCopy[i] = "P"; // Default to 'P'
+              rowCopy[i] = "P";
             }
           }
           rowCopy[37] = String(calculateCorrectWorkingDays({ rowData: rowCopy }));
@@ -1107,11 +1111,11 @@
 
     function confirmAddMR() {
       const rawInput = document.getElementById("modalMrNo").value.trim();
-      const jobNo = document.getElementById("modalJobSelect").value;
+      const jobInputVal = document.getElementById("modalJobInput").value.trim();
       const match = rawInput.match(/\/\s*(\d+)\s*\//);
       const tabLabel = match ? `MR NO. ${match[1]}` : `MR NO. ${mrSheets.length + 1}`;
 
-      mrSheets.push({ label: tabLabel, title: `${rawInput}, JOB No. ${jobNo}`, rows: [] });
+      mrSheets.push({ label: tabLabel, title: `${rawInput}, JOB No. ${jobInputVal}`, rows: [] });
       currentMRIndex = mrSheets.length - 1;
       currentPage = 1;
       closeModal("mrModal");
@@ -1138,13 +1142,6 @@
     function calculateCorrectWorkingDays(row) {
       let totalDays = 0;
 
-      // Exact Monday to Sunday (7-day) blocks from 21 Aug to 20 Sep 2026:
-      // Block 1: 21 (Fri), 22 (Sat) | Sunday 23 (Sun) -> Working: 21, 22 | Sunday: 23
-      // Block 2: 24 (Mon) to 29 (Sat) | Sunday 30 (Sun) -> Working: 24, 25, 26, 27, 28, 29 | Sunday: 30
-      // Block 3: 31 (Mon) to 5 (Sat) | Sunday 6 (Sun) -> Working: 31, 1, 2, 3, 4, 5 | Sunday: 6
-      // Block 4: 7 (Mon) to 12 (Sat) | Sunday 13 (Sun) -> Working: 7, 8, 9, 10, 11, 12 | Sunday: 13
-      // Block 5: 14 (Mon) to 19 (Sat) | Sunday 20 (Sun) -> Working: 14, 15, 16, 17, 18, 19 | Sunday: 20
-      
       const weeks = [
         { working: ["21", "22"], sunday: "23" },
         { working: ["24", "25", "26", "27", "28", "29"], sunday: "30" },
@@ -1157,7 +1154,6 @@
         let hasAbsentInWeek = false;
         let weekWorkingPresentCount = 0;
 
-        // Check working days of this Monday-Sunday week
         for (let i = 6; i <= 36; i++) {
           let dayNum = masterHeaders[i];
           if (week.working.includes(dayNum)) {
@@ -1172,7 +1168,6 @@
 
         totalDays += weekWorkingPresentCount;
 
-        // If no absent/dash in this week's working days, add the Sunday credit
         if (!hasAbsentInWeek) {
           for (let i = 6; i <= 36; i++) {
             if (masterHeaders[i] === week.sunday && row.rowData[i] === 'SUNDAY') {
@@ -1621,30 +1616,28 @@
       if (!row) return;
       const calView = document.getElementById("editCalendarView");
       
-      let html = `<div style="font-weight:bold; font-size:13px; margin-bottom:10px; color:#2b579a;">Attendance Calendar (21 Aug - 20 Sep) - Click day to toggle -- / A</div>`;
+      let html = `<div style="font-weight:bold; font-size:13px; margin-bottom:10px; color:#2b579a;">Attendance Calendar (21 Aug - 20 Sep) - Click day to toggle P / A</div>`;
       html += `<div class="cal-grid">`;
 
       for (let i = 6; i <= 36; i++) {
         let dayHeader = masterHeaders[i];
-        let val = row.rowData[i] || '--';
+        let val = row.rowData[i] || 'P';
         let isAbsent = (val === 'A');
-        let isDash = (val === '--');
-        let cellBg = isAbsent ? 'background: #f8d7da; border: 2.5px solid #dc3545; color: #dc3545;' : (isDash ? 'background: #eef2f7;' : '');
+        let cellBg = isAbsent ? 'background: #f8d7da; border: 2.5px solid #dc3545; color: #dc3545;' : '';
 
         html += `<div class="cal-day-cell" style="${cellBg}" onclick="toggleDayAttendance(${i})">Day ${dayHeader}<br><span style="font-size:11px; font-weight:900;">${val}</span></div>`;
       }
       html += `</div>`;
 
-      // Two Separate Input Boxes for "From" and "To" with "to" in between
       html += `
         <div style="margin-top: 16px; padding: 12px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-            <label style="font-size: 11.5px; font-weight: bold;">Quick Range (--) Apply:</label>
+            <label style="font-size: 11.5px; font-weight: bold;">Quick Range (A) Apply:</label>
             <input type="number" id="rangeFromInput" placeholder="21" style="width: 70px; height: 30px; padding: 4px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; font-weight: bold;">
             <span style="font-size: 12px; font-weight: bold; color: #333;">to</span>
             <input type="number" id="rangeToInput" placeholder="25" style="width: 70px; height: 30px; padding: 4px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; font-weight: bold;">
           </div>
-          <button class="btn-modal" style="background: #2b579a; color: white; padding: 6px 14px;" onclick="applyCalendarRangeDashBoxes()">APPLY (--)</button>
+          <button class="btn-modal" style="background: #dc3545; color: white; padding: 6px 14px;" onclick="applyCalendarRangeAbsent()">APPLY (A)</button>
         </div>
       `;
 
@@ -1659,13 +1652,10 @@
       let currentVal = row.rowData[colIndex];
       if (currentVal === 'SUNDAY') return;
 
-      // Naya cycle: '--' -> 'P' -> 'A' -> '--'
-      if (currentVal === '--') {
-        row.rowData[colIndex] = 'P';
-      } else if (currentVal === 'P') {
+      if (currentVal === 'P') {
         row.rowData[colIndex] = 'A';
       } else {
-        row.rowData[colIndex] = '--';
+        row.rowData[colIndex] = 'P';
       }
 
       let calculatedDays = calculateCorrectWorkingDays(row);
@@ -1677,7 +1667,7 @@
       updateEmpInfoBar();
     }
 
-    function applyCalendarRangeDashBoxes() {
+    function applyCalendarRangeAbsent() {
       const fromVal = parseInt(document.getElementById("rangeFromInput").value.trim());
       const toVal = parseInt(document.getElementById("rangeToInput").value.trim());
 
@@ -1698,7 +1688,7 @@
         let dayHeader = masterHeaders[i];
         if (targetDays.includes(dayHeader)) {
           if (row.rowData[i] !== 'SUNDAY') {
-            row.rowData[i] = '--';
+            row.rowData[i] = 'A';
           }
         }
       }
@@ -1710,7 +1700,7 @@
 
       renderAttendanceCalendar();
       updateEmpInfoBar();
-      showAlert("Double Dash (--) applied to specified range successfully!");
+      showAlert("Absent (A) applied to specified range successfully!");
     }
 
     function saveEditedData() {
