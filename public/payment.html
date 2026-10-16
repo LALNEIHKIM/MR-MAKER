@@ -126,10 +126,6 @@
 
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
     .cal-day-cell { border: 1.5px solid #ccc; border-radius: 4px; padding: 8px 4px; cursor: pointer; font-weight: bold; font-size: 11.5px; background: #f8f9fa; text-align: center; user-select: none; }
-    .cal-day-cell.absent { 
-      background: #f8d7da; border: 2.5px solid #dc3545; border-radius: 50%; color: #dc3545; 
-      width: 48px; height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto; 
-    }
 
     .code-by-grid { display: flex; gap: 12px; padding: 16px; height: 440px; background: #f8f9fa; }
     .code-by-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
@@ -147,32 +143,6 @@
 
     .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 4px; background: #e0e0e0; font-weight: bold; font-size: 12px; }
     .pagination-bar button { padding: 2px 8px; cursor: pointer; font-weight: bold; }
-
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      #screenDLR, #screenDLR * {
-        visibility: visible;
-      }
-      #screenDLR {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100vw;
-        height: 100vh;
-        background: #fff !important;
-        display: flex !important;
-        flex-direction: column;
-      }
-      #screenDLR > div:first-child {
-        display: none !important;
-      }
-      #dlrReportContent {
-        padding: 0 !important;
-        background: #fff !important;
-      }
-    }
   </style>
 </head>
 <body>
@@ -219,11 +189,10 @@
           <button class="btn-action btn-edit" id="btnEditRow" onclick="openEditModal()">✏️ EDIT INDL</button>
           
           <div class="dropdown">
-            <button class="btn-action" style="background:#d35400; font-weight:900;" onclick="checkExcelImportAccess(event)">⚙️ OPTIONS ▾</button>
+            <button class="btn-action" style="background:#d35400; font-weight:900;">⚙️ OPTIONS ▾</button>
             <div class="dropdown-content">
-              <input type="file" id="excelImportFile" accept=".xlsx, .xls" style="display:none;" onchange="handleExcelImport(event)">
-              <button onclick="checkAndTriggerExcelImport()">📁 Import Excel</button>
               <button onclick="exportTableToExcel()">📥 Export to Excel</button>
+              <button onclick="exportAllExcelSheets()">📊 All Excel Export</button>
               <button onclick="deleteActiveMR()" style="color:#c0392b;">🗑️ Delete MR</button>
               <button onclick="changeRowFontColorModal()">🎨 Row Font Colour Changed</button>
               <button onclick="changeRowHighlightColorModal()">🖌️ Row Highlight Colour Changed</button>
@@ -246,7 +215,7 @@
     </div>
   </div>
 
-  <!-- DLR REPORT WINDOW (SEPARATE VIEW) -->
+  <!-- DLR REPORT WINDOW -->
   <div id="screenDLR" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fff; z-index:500; flex-direction:column;">
     <div style="background:#2b579a; color:#fff; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
       <h3 style="font-size:16px;">DAILY LABOUR REPORT (DLR SUMMARY)</h3>
@@ -257,11 +226,10 @@
         <button class="btn-modal" style="background:#2980b9; color:#fff;" onclick="closeDLRWindow()">🔙 Go To Payment</button>
       </div>
     </div>
-    <div id="dlrReportContent" style="flex:1; overflow:auto; padding:20px; background:#f4f4f4;">
-    </div>
+    <div id="dlrReportContent" style="flex:1; overflow:auto; padding:20px; background:#f4f4f4;"></div>
   </div>
 
-  <!-- DLR EDIT FIELDS MODAL FORM WITH HIGH Z-INDEX -->
+  <!-- DLR EDIT MODAL FORM -->
   <div class="modal-overlay" id="dlrEditModal" style="z-index: 600;">
     <div class="modal-window" style="width: 500px; padding: 20px; gap: 12px;">
       <h3 style="color:#2b579a; text-align:center;">EDIT DLR HEADERS & SIGNATURES</h3>
@@ -376,9 +344,7 @@
             <span id="daysRangeHelper" style="font-size: 10.5px; font-weight: bold; color: #2b579a; background: #eef2f7; padding: 2px 6px; border-radius: 3px;">Target: S/No 1 to 20</span>
           </div>
           <div style="display: flex; gap: 8px;">
-            <div id="daysSNoList" style="width: 45px; background: #fff; border: 1.5px solid #ccc; border-radius: 4px; padding: 8px 2px; font-family: monospace; font-size: 13px; color: #666; text-align: right; line-height: 19.5px; height: 380px; overflow: hidden; user-select: none;">
-              1.
-            </div>
+            <div id="daysSNoList" style="width: 45px; background: #fff; border: 1.5px solid #ccc; border-radius: 4px; padding: 8px 2px; font-family: monospace; font-size: 13px; color: #666; text-align: right; line-height: 19.5px; height: 380px; overflow: hidden; user-select: none;">1.</div>
             <textarea id="bulkDaysInput" placeholder="31&#10;31&#10;25&#10;28&#10;..." oninput="previewBulkDays()" onscroll="document.getElementById('daysSNoList').scrollTop = this.scrollTop;" style="flex: 1; height: 380px; padding: 8px; font-size: 13px; font-family: monospace; line-height: 19.5px; border: 1.5px solid #ccc; border-radius: 4px; outline: none; resize: vertical;"></textarea>
           </div>
         </div>
@@ -397,8 +363,7 @@
         <span style="cursor:pointer;" onclick="closeModal('editModal')">✖</span>
       </div>
       
-      <div id="editEmpInfoBar" style="background: #eef2f7; padding: 8px 16px; border-bottom: 1px solid #ccc; font-size: 12px; font-weight: bold; color: #153465; display: flex; gap: 15px; flex-wrap: wrap;">
-      </div>
+      <div id="editEmpInfoBar" style="background: #eef2f7; padding: 8px 16px; border-bottom: 1px solid #ccc; font-size: 12px; font-weight: bold; color: #153465; display: flex; gap: 15px; flex-wrap: wrap;"></div>
 
       <div class="edit-tabs">
         <button class="edit-tab-btn active" id="tabBtnDetails" onclick="switchEditTab('details')">📋 Employee Details</button>
@@ -614,7 +579,7 @@
         if (sundayDays.includes(dayHeader)) {
           rowCopy[i] = "SUNDAY";
         } else {
-          rowCopy[i] = "P";
+          rowCopy[i] = "P"; // Default to 'P' instead of '--'
         }
       }
       
@@ -638,10 +603,6 @@
       selectedSearchedEmp = null;
     }
 
-    function checkExcelImportAccess(e) {}
-    function checkAndTriggerExcelImport() { document.getElementById('excelImportFile').click(); }
-
-    // DLR WINDOW FUNCTIONS
     function openDLRWindow() {
       if (mrSheets.length === 0) {
         showAlert("Please create or select an MR sheet first!", true);
@@ -752,7 +713,6 @@
           let colSpanTotal = (activeTrades.length + 1) * 2;
           html += `<td colspan="${colSpanTotal}" style="border:1px solid #000; font-weight:bold; color:red; text-align:center; padding:3px;">SUNDAY</td>`;
         } else {
-          // ON ROLL: Count ALL workers in that trade (including absent ones)
           let totalOnRoll = 0;
           activeTrades.forEach((t, tIdx) => {
             let cnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t)).length;
@@ -763,10 +723,9 @@
           totalOnRollSum += totalOnRoll;
           html += `<td style="border:1px solid #000; font-weight:bold; padding:2px; background:#fafafa;">${totalOnRoll}</td>`;
 
-          // PRESENT: Count ONLY workers who are present ('P')
           let totalPresent = 0;
           activeTrades.forEach((t, tIdx) => {
-            let pCnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t) && r.rowData[i] === 'P').length;
+            let pCnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t) && r.rowData[i] !== 'A' && r.rowData[i] !== '--').length;
             presentSums[tIdx] += pCnt;
             totalPresent += pCnt;
             html += `<td style="border:1px solid #000; padding:2px;">${pCnt}</td>`;
@@ -787,7 +746,6 @@
 
       html += `</tbody></table>`;
 
-      // Signature section: C/s in center, I/C Work's on right, with proper gaps
       html += `
         <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; font-weight: bold; font-size: 10px; align-items: start;">
           <div></div>
@@ -822,7 +780,6 @@
         [""]
       ];
 
-      // Table Header Row 1 (ON ROLL aur PRESENT ke headers)
       let h1 = ["DATE"];
       activeTrades.forEach(() => h1.push(""));
       h1.push("TOTAL");
@@ -830,7 +787,6 @@
       h1.push("TOTAL");
       wsData.push(h1);
 
-      // Table Header Row 2 (Trade names)
       let h2 = [""];
       activeTrades.forEach(t => h2.push(t));
       h2.push("TOTAL");
@@ -843,7 +799,6 @@
       let presentSums = new Array(activeTrades.length).fill(0);
       let totalPresentSum = 0;
 
-      // Data Rows (21-Aug se 20-Sep tak)
       for (let i = 6; i <= 36; i++) {
         let dayNum = masterHeaders[i];
         let isSunday = ["23", "30", "6", "13", "20"].includes(dayNum);
@@ -867,7 +822,7 @@
 
           let tPresRow = 0;
           activeTrades.forEach((t, tIdx) => {
-            let pCnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t) && r.rowData[i] === 'P').length;
+            let pCnt = rows.filter(r => String(r.rowData[2] || '').trim().toUpperCase().includes(t) && r.rowData[i] !== 'A' && r.rowData[i] !== '--').length;
             presentSums[tIdx] += pCnt;
             tPresRow += pCnt;
             rowData.push(pCnt);
@@ -878,7 +833,6 @@
         wsData.push(rowData);
       }
 
-      // TOTAL Row at the bottom of the table
       let totalRow = ["TOTAL"];
       onRollSums.forEach(sum => totalRow.push(sum));
       totalRow.push(totalOnRollSum);
@@ -886,22 +840,16 @@
       totalRow.push(totalPresentSum);
       wsData.push(totalRow);
 
-      // Spacing rows for Signatures
       wsData.push([""]);
       wsData.push([""]);
 
-      // Signature Rows (C/s, I/C Work's, OIC)
       wsData.push(["", "", dlrCustomValues.csText, "", "", "", "", dlrCustomValues.icWorksText.replace(/\n/g, ' ')]);
       wsData.push([""]);
       
       let oicLines = dlrCustomValues.oicText.split('\n');
-      oicLines.forEach(line => {
-        wsData.push(["", "", "", line]);
-      });
+      oicLines.forEach(line => { wsData.push(["", "", "", line]); });
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
-      
-      // Merges for headers
       ws['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
         { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
@@ -1047,42 +995,39 @@
       codes.forEach(code => {
         const found = masterData.find(d => d.code.toLowerCase() === code.toLowerCase());
         if (found) {
-          const dischargeVal = String(found.rowData[23] || '').trim();
-          if (dischargeVal === "") {
-            const totalCols = masterHeaders.length;
-            const rowCopy = new Array(totalCols).fill('');
-            rowCopy[1] = found.code;
-            rowCopy[2] = found.designation || 'MAZ';
-            rowCopy[3] = found.name;
-            rowCopy[4] = found.fatherName;
-            rowCopy[5] = found.gender || 'MALE';
-            
-            const sundayDays = ["23", "30", "6", "13", "20"];
-            for (let i = 6; i <= 36; i++) {
-              let dayHeader = masterHeaders[i];
-              if (sundayDays.includes(dayHeader)) {
-                rowCopy[i] = "SUNDAY";
-              } else {
-                rowCopy[i] = "P";
-              }
-            }
-            rowCopy[37] = String(calculateCorrectWorkingDays({ rowData: rowCopy }));
-            rowCopy[38] = calculateRateByTrade(rowCopy[2]);
-            rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
-            rowCopy[40] = found.accountNo;
-            rowCopy[41] = found.ifsCode;
-            rowCopy[42] = found.enrolmentDate;
-            rowCopy[43] = "21-Aug-2026";
-
-            const newObj = { code: found.code, name: found.name, rowData: rowCopy };
-            if (targetIndex < curRows.length) {
-              curRows.splice(targetIndex, 0, newObj);
+          const totalCols = masterHeaders.length;
+          const rowCopy = new Array(totalCols).fill('');
+          rowCopy[1] = found.code;
+          rowCopy[2] = found.designation || 'MAZ';
+          rowCopy[3] = found.name;
+          rowCopy[4] = found.fatherName;
+          rowCopy[5] = found.gender || 'MALE';
+          
+          const sundayDays = ["23", "30", "6", "13", "20"];
+          for (let i = 6; i <= 36; i++) {
+            let dayHeader = masterHeaders[i];
+            if (sundayDays.includes(dayHeader)) {
+              rowCopy[i] = "SUNDAY";
             } else {
-              curRows.push(newObj);
+              rowCopy[i] = "P"; // Default to 'P'
             }
-            targetIndex++;
-            addedCount++;
           }
+          rowCopy[37] = String(calculateCorrectWorkingDays({ rowData: rowCopy }));
+          rowCopy[38] = calculateRateByTrade(rowCopy[2]);
+          rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
+          rowCopy[40] = found.accountNo;
+          rowCopy[41] = found.ifsCode;
+          rowCopy[42] = found.enrolmentDate;
+          rowCopy[43] = "21-Aug-2026";
+
+          const newObj = { code: found.code, name: found.name, rowData: rowCopy };
+          if (targetIndex < curRows.length) {
+            curRows.splice(targetIndex, 0, newObj);
+          } else {
+            curRows.push(newObj);
+          }
+          targetIndex++;
+          addedCount++;
         }
       });
 
@@ -1191,34 +1136,51 @@
     }
 
     function calculateCorrectWorkingDays(row) {
-      const weeks = [
-        [6, 7, 8, 9, 10, 11, 12],     
-        [13, 14, 15, 16, 17, 18, 19], 
-        [20, 21, 22, 23, 24, 25, 26], 
-        [27, 28, 29, 30, 31, 32, 33], 
-        [34, 35, 36]                  
-      ];
-
       let totalDays = 0;
 
-      weeks.forEach(weekIndices => {
-        let hasAbsent = false;
-        weekIndices.forEach(idx => {
-          if (row.rowData[idx] === 'A') {
-            hasAbsent = true;
-          }
-        });
+      // Exact Monday to Sunday (7-day) blocks from 21 Aug to 20 Sep 2026:
+      // Block 1: 21 (Fri), 22 (Sat) | Sunday 23 (Sun) -> Working: 21, 22 | Sunday: 23
+      // Block 2: 24 (Mon) to 29 (Sat) | Sunday 30 (Sun) -> Working: 24, 25, 26, 27, 28, 29 | Sunday: 30
+      // Block 3: 31 (Mon) to 5 (Sat) | Sunday 6 (Sun) -> Working: 31, 1, 2, 3, 4, 5 | Sunday: 6
+      // Block 4: 7 (Mon) to 12 (Sat) | Sunday 13 (Sun) -> Working: 7, 8, 9, 10, 11, 12 | Sunday: 13
+      // Block 5: 14 (Mon) to 19 (Sat) | Sunday 20 (Sun) -> Working: 14, 15, 16, 17, 18, 19 | Sunday: 20
+      
+      const weeks = [
+        { working: ["21", "22"], sunday: "23" },
+        { working: ["24", "25", "26", "27", "28", "29"], sunday: "30" },
+        { working: ["31", "1", "2", "3", "4", "5"], sunday: "6" },
+        { working: ["7", "8", "9", "10", "11", "12"], sunday: "13" },
+        { working: ["14", "15", "16", "17", "18", "19"], sunday: "20" }
+      ];
 
-        weekIndices.forEach(idx => {
-          let val = row.rowData[idx];
-          if (val === 'P') {
-            totalDays++;
-          } else if (val === 'SUNDAY') {
-            if (!hasAbsent) {
-              totalDays++;
+      weeks.forEach(week => {
+        let hasAbsentInWeek = false;
+        let weekWorkingPresentCount = 0;
+
+        // Check working days of this Monday-Sunday week
+        for (let i = 6; i <= 36; i++) {
+          let dayNum = masterHeaders[i];
+          if (week.working.includes(dayNum)) {
+            let val = row.rowData[i];
+            if (val === 'A' || val === '--') {
+              hasAbsentInWeek = true;
+            } else if (val === 'P' || val === '-') {
+              weekWorkingPresentCount++;
             }
           }
-        });
+        }
+
+        totalDays += weekWorkingPresentCount;
+
+        // If no absent/dash in this week's working days, add the Sunday credit
+        if (!hasAbsentInWeek) {
+          for (let i = 6; i <= 36; i++) {
+            if (masterHeaders[i] === week.sunday && row.rowData[i] === 'SUNDAY') {
+              totalDays++;
+              break;
+            }
+          }
+        }
       });
 
       return totalDays;
@@ -1331,17 +1293,21 @@
     function exportTableToExcel() {
       if (mrSheets.length === 0) return showAlert("No MR sheet to export!", true);
       const curMR = mrSheets[currentMRIndex];
+      const normalRows = (curMR.rows || []).filter(r => !r.isGrandTotal);
+      const dataRowCount = normalRows.length;
+
       const wsData = [];
-      
-      const hLetters = [];
-      for(let i=0; i<masterHeaders.length; i++) hLetters.push(getColumnLetter(i));
-      wsData.push(hLetters);
-      
+      const mrNoLine = curMR.title.split(',')[0] || curMR.label;
+      const jobNoLine = curMR.title.split(',')[1] || "";
+      wsData.push([mrNoLine]);
+      wsData.push([jobNoLine]);
+      wsData.push([]); 
+
       const hNames = masterHeaders.map(h => h.replace(/\n/g, ' '));
       wsData.push(hNames);
 
       let gTotal = 0;
-      (curMR.rows || []).filter(r => !r.isGrandTotal).forEach((r, idx) => {
+      normalRows.forEach((r, idx) => {
         let rowCopy = [...r.rowData];
         rowCopy[0] = idx + 1;
         wsData.push(rowCopy);
@@ -1349,14 +1315,161 @@
       });
 
       let gRow = new Array(masterHeaders.length).fill('');
+      gRow[38] = "G/TOTAL :";
       gRow[39] = gTotal;
       wsData.push(gRow);
 
       const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const thinBorder = {
+        top: { style: 'thin', color: { rgb: '000000' } },
+        bottom: { style: 'thin', color: { rgb: '000000' } },
+        left: { style: 'thin', color: { rgb: '000000' } },
+        right: { style: 'thin', color: { rgb: '000000' } }
+      };
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      const sundayColIndices = [];
+      masterHeaders.forEach((h, idx) => {
+        if (["23", "30", "6", "13", "20"].includes(h)) sundayColIndices.push(idx);
+      });
+
+      const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } }];
+      if (dataRowCount > 0) {
+        sundayColIndices.forEach(colIdx => {
+          merges.push({ s: { r: 4, c: colIdx }, e: { r: 4 + dataRowCount - 1, c: colIdx } });
+        });
+      }
+      ws['!merges'] = merges;
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cellAddress]) ws[cellAddress] = { v: '' };
+          if (!ws[cellAddress].s) ws[cellAddress].s = {};
+          ws[cellAddress].s.border = thinBorder;
+
+          if (R === 0 || R === 1) {
+            ws[cellAddress].s.font = { bold: true, underline: true, name: 'Arial', sz: 11 };
+          } else if (R === 3) {
+            ws[cellAddress].s.font = { bold: true, color: { rgb: '000000' }, name: 'Arial', sz: 10 };
+            ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+            ws[cellAddress].s.fill = { fgColor: { rgb: 'B4C6E7' } };
+          } else if (R >= 4 && R < 4 + dataRowCount) {
+            ws[cellAddress].s.font = { name: 'Arial', sz: 10 };
+            ws[cellAddress].s.alignment = { vertical: 'center' };
+            const val = ws[cellAddress].v;
+            if (val === 'A') {
+              ws[cellAddress].s.font = { name: 'Arial', sz: 10, bold: true, color: { rgb: 'DC3545' } };
+              ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+            }
+            if (sundayColIndices.includes(C)) {
+              ws[cellAddress].v = "SUNDAY";
+              ws[cellAddress].s.font = { name: 'Arial', sz: 11, bold: true, color: { rgb: 'FF0000' } };
+              ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center', textRotation: 90 };
+            }
+          } else if (R === 4 + dataRowCount && C === 39) {
+            ws[cellAddress].s.font = { bold: true, name: 'Arial', sz: 10, color: { rgb: 'C0392B' } };
+          }
+        }
+      }
+
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "MR_Payment");
-      XLSX.writeFile(wb, `${curMR.label.replace(/\s+/g, '_')}_Payment.xlsx`);
+      const sheetNameClean = curMR.label.replace(/[^a-zA-Z0-9]/g, '_');
+      XLSX.utils.book_append_sheet(wb, ws, sheetNameClean);
+      XLSX.writeFile(wb, `${sheetNameClean}_Payment.xlsx`);
       showAlert("Excel exported successfully!");
+    }
+
+    function exportAllExcelSheets() {
+      if (mrSheets.length === 0) return showAlert("No MR sheets available to export!", true);
+      const wb = XLSX.utils.book_new();
+
+      const thinBorder = {
+        top: { style: 'thin', color: { rgb: '000000' } },
+        bottom: { style: 'thin', color: { rgb: '000000' } },
+        left: { style: 'thin', color: { rgb: '000000' } },
+        right: { style: 'thin', color: { rgb: '000000' } }
+      };
+
+      mrSheets.forEach(curMR => {
+        const normalRows = (curMR.rows || []).filter(r => !r.isGrandTotal);
+        const dataRowCount = normalRows.length;
+        const wsData = [];
+
+        const mrNoLine = curMR.title.split(',')[0] || curMR.label;
+        const jobNoLine = curMR.title.split(',')[1] || "";
+        wsData.push([mrNoLine]);
+        wsData.push([jobNoLine]);
+        wsData.push([]);
+
+        const hNames = masterHeaders.map(h => h.replace(/\n/g, ' '));
+        wsData.push(hNames);
+
+        let gTotal = 0;
+        normalRows.forEach((r, idx) => {
+          let rowCopy = [...r.rowData];
+          rowCopy[0] = idx + 1;
+          wsData.push(rowCopy);
+          gTotal += parseFloat(rowCopy[39]) || 0;
+        });
+
+        let gRow = new Array(masterHeaders.length).fill('');
+        gRow[38] = "G/TOTAL :";
+        gRow[39] = gTotal;
+        wsData.push(gRow);
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        const sundayColIndices = [];
+        masterHeaders.forEach((h, idx) => {
+          if (["23", "30", "6", "13", "20"].includes(h)) sundayColIndices.push(idx);
+        });
+
+        const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } }];
+        if (dataRowCount > 0) {
+          sundayColIndices.forEach(colIdx => {
+            merges.push({ s: { r: 4, c: colIdx }, e: { r: 4 + dataRowCount - 1, c: colIdx } });
+          });
+        }
+        ws['!merges'] = merges;
+
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[cellAddress]) ws[cellAddress] = { v: '' };
+            if (!ws[cellAddress].s) ws[cellAddress].s = {};
+            ws[cellAddress].s.border = thinBorder;
+
+            if (R === 0 || R === 1) {
+              ws[cellAddress].s.font = { bold: true, underline: true, name: 'Arial', sz: 11 };
+            } else if (R === 3) {
+              ws[cellAddress].s.font = { bold: true, color: { rgb: '000000' }, name: 'Arial', sz: 10 };
+              ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+              ws[cellAddress].s.fill = { fgColor: { rgb: 'B4C6E7' } };
+            } else if (R >= 4 && R < 4 + dataRowCount) {
+              ws[cellAddress].s.font = { name: 'Arial', sz: 10 };
+              ws[cellAddress].s.alignment = { vertical: 'center' };
+              if (ws[cellAddress].v === 'A') {
+                ws[cellAddress].s.font = { name: 'Arial', sz: 10, bold: true, color: { rgb: 'DC3545' } };
+                ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+              }
+              if (sundayColIndices.includes(C)) {
+                ws[cellAddress].v = "SUNDAY";
+                ws[cellAddress].s.font = { name: 'Arial', sz: 11, bold: true, color: { rgb: 'FF0000' } };
+                ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center', textRotation: 90 };
+              }
+            } else if (R === 4 + dataRowCount && C === 39) {
+              ws[cellAddress].s.font = { bold: true, name: 'Arial', sz: 10, color: { rgb: 'C0392B' } };
+            }
+          }
+        }
+
+        const sheetNameClean = curMR.label.replace(/[^a-zA-Z0-9]/g, '_');
+        XLSX.utils.book_append_sheet(wb, ws, sheetNameClean);
+      });
+
+      XLSX.writeFile(wb, `All_MR_Sheets_Payment.xlsx`);
+      showAlert("All MR sheets exported successfully!");
     }
 
     function pushUndoState() {
@@ -1394,7 +1507,6 @@
       }
     }
 
-    function handleExcelImport(e) {}
     function saveToLocal(silent = false) {
       localStorage.setItem(`CPL_OFFLINE_SHEETS_${activePeriod}`, JSON.stringify({ mrSheets: mrSheets, lastIndex: currentMRIndex }));
       if (!silent) showAlert("Data saved!");
@@ -1415,7 +1527,6 @@
 
     function openPageTotalModal() { showAlert("Page total"); }
 
-    // EDIT MODAL TABS & NAVIGATION
     function switchEditTab(mode) {
       activeEditTabMode = mode;
       document.getElementById("tabBtnDetails").className = `edit-tab-btn ${mode === 'details' ? 'active' : ''}`;
@@ -1483,7 +1594,6 @@
       grid.innerHTML = "";
 
       const editableIndices = [1, 2, 3, 4, 5, 40, 41, 42, 43];
-
       editableIndices.forEach(i => {
         const colLetter = getColumnLetter(i);
         const colTitle = masterHeaders[i] || '';
@@ -1511,18 +1621,33 @@
       if (!row) return;
       const calView = document.getElementById("editCalendarView");
       
-      let html = `<div style="font-weight:bold; font-size:13px; margin-bottom:10px; color:#2b579a;">Attendance Calendar (21 Aug - 20 Sep) - Click day to toggle Present / Absent</div>`;
+      let html = `<div style="font-weight:bold; font-size:13px; margin-bottom:10px; color:#2b579a;">Attendance Calendar (21 Aug - 20 Sep) - Click day to toggle -- / A</div>`;
       html += `<div class="cal-grid">`;
 
       for (let i = 6; i <= 36; i++) {
         let dayHeader = masterHeaders[i];
-        let val = row.rowData[i] || 'P';
-        let isAbsent = (val !== 'P' && val !== 'SUNDAY');
-        let cellClass = isAbsent ? 'cal-day-cell absent' : 'cal-day-cell';
+        let val = row.rowData[i] || '--';
+        let isAbsent = (val === 'A');
+        let isDash = (val === '--');
+        let cellBg = isAbsent ? 'background: #f8d7da; border: 2.5px solid #dc3545; color: #dc3545;' : (isDash ? 'background: #eef2f7;' : '');
 
-        html += `<div class="${cellClass}" onclick="toggleDayAttendance(${i})">Day ${dayHeader}<br><span style="font-size:11px; font-weight:900;">${val}</span></div>`;
+        html += `<div class="cal-day-cell" style="${cellBg}" onclick="toggleDayAttendance(${i})">Day ${dayHeader}<br><span style="font-size:11px; font-weight:900;">${val}</span></div>`;
       }
       html += `</div>`;
+
+      // Two Separate Input Boxes for "From" and "To" with "to" in between
+      html += `
+        <div style="margin-top: 16px; padding: 12px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+            <label style="font-size: 11.5px; font-weight: bold;">Quick Range (--) Apply:</label>
+            <input type="number" id="rangeFromInput" placeholder="21" style="width: 70px; height: 30px; padding: 4px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; font-weight: bold;">
+            <span style="font-size: 12px; font-weight: bold; color: #333;">to</span>
+            <input type="number" id="rangeToInput" placeholder="25" style="width: 70px; height: 30px; padding: 4px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; font-weight: bold;">
+          </div>
+          <button class="btn-modal" style="background: #2b579a; color: white; padding: 6px 14px;" onclick="applyCalendarRangeDashBoxes()">APPLY (--)</button>
+        </div>
+      `;
+
       calView.innerHTML = html;
     }
 
@@ -1534,10 +1659,13 @@
       let currentVal = row.rowData[colIndex];
       if (currentVal === 'SUNDAY') return;
 
-      if (currentVal === 'P') {
+      // Naya cycle: '--' -> 'P' -> 'A' -> '--'
+      if (currentVal === '--') {
+        row.rowData[colIndex] = 'P';
+      } else if (currentVal === 'P') {
         row.rowData[colIndex] = 'A';
       } else {
-        row.rowData[colIndex] = 'P';
+        row.rowData[colIndex] = '--';
       }
 
       let calculatedDays = calculateCorrectWorkingDays(row);
@@ -1547,6 +1675,42 @@
 
       renderAttendanceCalendar();
       updateEmpInfoBar();
+    }
+
+    function applyCalendarRangeDashBoxes() {
+      const fromVal = parseInt(document.getElementById("rangeFromInput").value.trim());
+      const toVal = parseInt(document.getElementById("rangeToInput").value.trim());
+
+      if (isNaN(fromVal) || isNaN(toVal)) {
+        return showAlert("Please enter valid 'From' and 'To' day numbers!", true);
+      }
+
+      const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      const row = normalRows[selectedRowIdx];
+      if (!row) return;
+
+      let targetDays = [];
+      for (let d = Math.min(fromVal, toVal); d <= Math.max(fromVal, toVal); d++) {
+        targetDays.push(String(d));
+      }
+
+      for (let i = 6; i <= 36; i++) {
+        let dayHeader = masterHeaders[i];
+        if (targetDays.includes(dayHeader)) {
+          if (row.rowData[i] !== 'SUNDAY') {
+            row.rowData[i] = '--';
+          }
+        }
+      }
+
+      let calculatedDays = calculateCorrectWorkingDays(row);
+      row.rowData[37] = String(calculatedDays);
+      const rate = parseFloat(row.rowData[38]) || 550;
+      row.rowData[39] = String(calculatedDays * rate);
+
+      renderAttendanceCalendar();
+      updateEmpInfoBar();
+      showAlert("Double Dash (--) applied to specified range successfully!");
     }
 
     function saveEditedData() {
@@ -1587,8 +1751,22 @@
     function insertBlankRowBelow() {
       pushUndoState();
       const totalCols = masterHeaders.length;
-      const newRow = new Array(totalCols).fill("");
+      const newRow = new Array(totalCols).fill("P");
+      newRow[0] = "";
+      newRow[1] = "";
+      newRow[2] = "MAZ";
+      newRow[3] = "";
+      newRow[4] = "";
       newRow[5] = "MALE";
+      
+      const sundayDays = ["23", "30", "6", "13", "20"];
+      for (let i = 6; i <= 36; i++) {
+        if (sundayDays.includes(masterHeaders[i])) {
+          newRow[i] = "SUNDAY";
+        } else {
+          newRow[i] = "P";
+        }
+      }
       newRow[37] = "31";
       
       const allRows = mrSheets[currentMRIndex].rows;
