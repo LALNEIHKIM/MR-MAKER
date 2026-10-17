@@ -48,18 +48,22 @@ app.get('/api/master-data', (req, res) => {
           let accountNo = String(rVals[15] || '').trim(); // Column P -> Index 15
           let ifsCode = String(rVals[16] || '').trim();     // Column Q -> Index 16
           let enrolmentDate = String(rVals[22] || '').trim(); // Column W -> Index 22
+          
+          // Agar master excel me kisi aur column par discharge date hai toh uska index yahan dein, 
+          // filhal ise blank ya master data ke anusaar set kar rahe hain taaki 21-Aug-2026 automatically na aaye.
+          let dischargeDate = String(rVals[23] || '').trim(); 
 
-          let rowArr = new Array(24).fill('');
-rowArr[1] = code;
-rowArr[2] = designation;
-rowArr[3] = name;
-rowArr[4] = fatherName;    // Table Column E
-rowArr[5] = gender ? gender : 'MALE'; // Table Column F
-rowArr[15] = accountNo; // ✅ Column P (Index 15) - Bank A/C No
-rowArr[16] = ifsCode;   // ✅ Column Q (Index 16) - IFS Code
-rowArr[17] = "31"; // Default 31 days
-rowArr[22] = enrolmentDate;
-rowArr[23] = "21-Aug-2026";
+          let rowArr = new Array(44).fill(''); // ✅ Total 44 columns (0 to 43)
+          rowArr[1] = code;
+          rowArr[2] = designation;
+          rowArr[3] = name;
+          rowArr[4] = fatherName;    // Table Column E
+          rowArr[5] = gender ? gender : 'MALE'; // Table Column F
+          rowArr[15] = accountNo; // Column P (Index 15) - Bank A/C No
+          rowArr[16] = ifsCode;   // Column Q (Index 16) - IFS Code
+          rowArr[17] = "31"; // Default 31 days
+          rowArr[22] = enrolmentDate;
+          rowArr[43] = dischargeDate; // ✅ Date of Discharge ab apne sahi index (43) par hai
 
           dataRows.push({
             code: code,
@@ -70,6 +74,7 @@ rowArr[23] = "21-Aug-2026";
             accountNo: accountNo,
             ifsCode: ifsCode,
             enrolmentDate: enrolmentDate,
+            dischargeDate: dischargeDate,
             rowData: rowArr
           });
         }
