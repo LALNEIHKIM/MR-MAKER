@@ -601,7 +601,7 @@
       rowCopy[40] = found.accountNo;
       rowCopy[41] = found.ifsCode;
       rowCopy[42] = found.enrolmentDate;
-      rowCopy[43] = "21-Aug-2026";
+      rowCopy[43] = found.dischargeDate || ""; // ✅ Master data se aayegi discharge date
 
       const newObj = { code: found.code, name: found.name, rowData: rowCopy };
       if (!mrSheets[currentMRIndex].rows) mrSheets[currentMRIndex].rows = [];
@@ -1030,7 +1030,7 @@
           rowCopy[40] = found.accountNo;
           rowCopy[41] = found.ifsCode;
           rowCopy[42] = found.enrolmentDate;
-          rowCopy[43] = "21-Aug-2026";
+          rowCopy[43] = found.dischargeDate || ""; // ✅ Master data se aayegi discharge date
 
           const newObj = { code: found.code, name: found.name, rowData: rowCopy };
           if (targetIndex < curRows.length) {
@@ -1673,7 +1673,6 @@
       let currentVal = row.rowData[colIndex];
       if (currentVal === 'SUNDAY') return;
 
-      // Cycle: 'P' -> 'A' -> '--' -> 'P'
       if (currentVal === 'P') {
         row.rowData[colIndex] = 'A';
       } else if (currentVal === 'A') {
