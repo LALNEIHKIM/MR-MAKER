@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CPL PAYMENT WORKSPACE</title>
+  <title>CPL PAYMENT WORKSPACE - DO II</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
@@ -55,6 +55,23 @@
       font-size: 12px; font-weight: 900; color: #000000; border-radius: 4px; gap: 4px; cursor: pointer;
     }
     .rs-total-box span { color: #c0392b; font-size: 13px; }
+
+
+    /* DO-II Table styles ko yeh update dein */
+#screenDOII table {
+  width: 100% !important;
+  table-layout: fixed !important; /* Yeh sabse zaroori hai taaki width force ho */
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+#screenDOII th, #screenDOII td {
+  border: 1px solid #000;
+  padding: 4px 5px;
+  overflow: hidden;
+  word-wrap: break-word;
+  white-space: normal !important;
+}
 
     .table-container { flex: 1 1 0px; height: 0; overflow: auto; border: 1.5px solid #000000; background: #ffffff; position: relative; }
     table { border-collapse: collapse; font-size: 11px; width: max-content; min-width: 100%; }
@@ -109,14 +126,49 @@
       writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 2px; background-color: #ffffff;
     }
 
-    @media print {
-      @page { size: A4 portrait; margin: 8mm; }
-      body * { visibility: hidden !important; }
-      #screenDLR, #screenDLR * { visibility: visible !important; }
-      #screenDLR { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; height: auto !important; background: #fff !important; }
-      #dlrTopBar { display: none !important; }
-      #dlrReportContent { overflow: visible !important; padding: 0 !important; background: #fff !important; width: 100% !important; }
-    }
+   @media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body, html {
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #screenDOII, #screenDOII * {
+    visibility: visible !important;
+  }
+
+  #screenDOII {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: transparent !important;
+    zoom: 75% !important;
+  }
+
+  /* Yeh pichhe wale container ki white background/shadow print me hatane ke liye */
+  #screenDOII > div:nth-child(2) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #doiiTopBar {
+    display: none !important;
+  }
+}
   </style>
 </head>
 <body>
@@ -196,33 +248,28 @@
     </div>
   </div>
 
-  <!-- DLR REPORT WINDOW -->
-  <div id="screenDLR" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fff; z-index:500; flex-direction:column;">
-    <div id="dlrTopBar" style="background:#2b579a; color:#fff; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="font-size:16px;">DAILY LABOUR REPORT (DLR SUMMARY)</h3>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-modal" style="background:#d35400; color:#fff;" onclick="toggleDLREditMode()">✏️ Edit Fields</button>
-        <button class="btn-modal" style="background:#27ae60; color:#fff;" onclick="printDLRReport()">🖨️ Print</button>
-        <button class="btn-modal" style="background:#e67e22; color:#fff;" onclick="exportDLRToExcel()">📥 Excel Export</button>
-        <button class="btn-modal" style="background:#2980b9; color:#fff;" onclick="closeDLRWindow()">🔙 Go To Payment</button>
-      </div>
-    </div>
-    <div id="dlrReportContent" style="flex:1; overflow:auto; padding:20px; background:#f4f4f4;"></div>
-  </div>
-
   <!-- DO PART-II ORDER FULL SCREEN WINDOW -->
   <div id="screenDOII" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#2b271d; z-index:500; flex-direction:column; padding:8px 12px; color:#000;">
-    <div style="background:#ffffff; padding:5px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; box-shadow:0 4px 10px rgba(0,0,0,0.3); border:1px solid #ccc; flex-shrink:0;">
-      <button class="btn-tool" style="background:#16a085; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="exportDO2Excel()">📊 EXPORT DO-II EXCEL (.XLSX)</button>
+    <div id="doiiTopBar" style="background:#ffffff; padding:5px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; box-shadow:0 4px 10px rgba(0,0,0,0.3); border:1px solid #ccc; flex-shrink:0;">
+      <div style="display:flex; gap:6px;">
+        <button class="btn-tool" style="background:#16a085; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="exportDO2Excel()">📊 EXPORT DO-II EXCEL (.XLSX)</button>
+        <button class="btn-tool" style="background:#27ae60; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="printDOIIReport()">🖨️ PRINT</button>
+        <button class="btn-tool" style="background:#d35400; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="openDOIIEditModal()">✏️ EDIT VIEW</button>
+      </div>
       <button class="btn-tool" style="background:#2980b9; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="closeDOIIWindow()">🔙 Go To Payment</button>
     </div>
 
     <div style="background:#ffffff; border-radius:4px; padding:12px; box-shadow:0 4px 15px rgba(0,0,0,0.4); flex:1; display:flex; flex-direction:column; overflow-y:auto;">
       
-      <!-- HEADER LAYOUT: LEFT SECTION/HQ & RIGHT DETT DETAILS -->
+      <!-- TOP HEADER LAYOUT -->
       <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:4px; flex-shrink:0;">
-        <div id="displayLeftHeader">E2 Section<br>HQ 74 RCC (GREF)</div>
-        <div id="displayRightDett" style="text-align:right;">Dett: N-V-T<br>405 RMPL<br>74 RCC (GREF)</div>
+        <div id="displayTopLeft" style="white-space: pre-line;">TO
+E2 Section
+HQ 74 RCC (GREF)</div>
+        <div id="displayTopRight" style="text-align:left; white-space: pre-line;">FROM
+Dett: N-V-T
+405 RMPL
+74 RCC (GREF)</div>
       </div>
 
       <!-- CENTER RESTRICTED & TITLE -->
@@ -231,77 +278,91 @@
         <h3 id="doHeaderTitle" style="font-size:13px; font-weight:900; text-decoration:underline; margin:3px 0;">SUMMARY OF DETT DO-II FOR THE MONTH OF SEP 2026</h3>
       </div>
 
-      <!-- TABLE CONTAINER WITH OPTIMIZED COLUMN WIDTHS -->
+      <!-- TABLE CONTAINER -->
       <div style="width:100%; border:1px solid #000; background:#fff; margin-bottom:15px;">
         <table style="width:100%; border-collapse:collapse; font-size:11px;">
-          <thead>
-            <tr style="background:#ffffff;">
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 35px;">S/No</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 45px;">MR S/NO</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 55px;">CODE</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 45px;">NEW CODE</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 85px;">TRADE</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 140px;">NAME</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 140px;">FATHER'S NAME</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 95px;">DATE OF RECRUITMENT/<br>RE-RECRUITMENT</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 95px;">DATE OF DISCHARGED/<br>DIED/INJURED</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 75px;">DATE OF<br>TFR</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 95px;">DATE OF<br>UPGRADATION/<br>DOWNGRADATION</th>
-              <th style="border:1px solid #000; padding:4px 6px; text-align:center; width: 250px; white-space: normal;">REMARKS</th>
-            </tr>
-          </thead>
+     <thead>
+  <tr style="background:#ffffff;">
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 4%;">S/No</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 5%;">MR S/NO</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 6%;">CODE</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 6%;">NEW CODE</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 7%;">TRADE</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 14%;">NAME</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 14%;">FATHER'S NAME</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 9%;">DATE OF RECRUITMENT</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 9%;">DATE OF DISCHARGE</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 5%;">DATE OF TFR</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 9%;">UPGRADATION/ DOWNGRADATION</th>
+    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 25%;">REMARKS</th>
+  </tr>
+</thead>
           <tbody id="do2TableBody"></tbody>
         </table>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto; padding-top:15px; font-size:11px; font-weight:bold;">
-        <div id="displayStation">Station : C/o 99 APO<br><br>Dated : <span id="displayDatedText">____ SEP 2026</span></div>
-        <div style="text-align:left; line-height:1.3;">
-          (<span id="displaySignName">Sujit Debnath</span>)<br>
-          <span id="displaySignDesig">EE (Civ)</span><br>
-          <span id="displaySignOrg">Officer Commanding</span><br>
-          <span id="displaySignUnit">74 RCC (GREF)</span>
+      <!-- CENTER & BOTTOM FOOTER LAYOUT -->
+      <div style="display:flex; justify-content:center; align-items:center; margin-top: 180px; margin-bottom: 10px; font-size:12px; font-weight:bold;">
+  <div id="displayCenter" style="white-space: pre-line; text-align:center;">Countere Signature</div>
+</div>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto; padding-top:10px; font-size:11px; font-weight:bold;">
+        <div id="displayBottomLeft" style="white-space: pre-line;">Station : C/o 99 APO
+
+Dated : ________________ SEP 2026</div>
+        <div id="displayBottomRight" style="text-align:left; line-height:1.3; white-space: pre-line;">(Sujit Debnath)
+EE (Civ)
+Officer Commanding
+74 RCC (GREF)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT VIEW MODAL WITH 5 TEXTAREAS -->
+  <div class="modal-overlay" id="doiiEditModal" style="z-index: 600;">
+    <div class="modal-window" style="width: 520px; padding: 20px; gap: 12px;">
+      <h3 style="color:#2b579a; text-align:center;">EDIT DO-II 5 LOCATIONS & HEADERS</h3>
+      <div style="display:flex; flex-direction:column; gap:8px; max-height:65vh; overflow-y:auto; padding-right:4px; text-align:left;">
+        
+        <div class="form-group" style="display:flex; flex-direction:column; gap:3px;">
+          <label style="font-size:11px; font-weight:bold;">1. Top Left Text (TO Section):</label>
+          <textarea id="editTopLeft" rows="3" style="padding:5px; font-size:12px; background:#fff; resize:vertical;">TO
+E2 Section
+HQ 74 RCC (GREF)</textarea>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- MODALS -->
-  <div class="modal-overlay" id="customConfirmModal">
-    <div class="modal-window" style="width: 420px; padding: 20px; gap: 14px; text-align: center;">
-      <h3 style="color:#2b579a; font-size:16px;">CONFIRMATION</h3>
-      <p id="customConfirmText" style="font-size: 13px; font-weight: bold; color: #333; line-height: 1.4;">Are you sure?</p>
-      <div style="display:flex; justify-content:center; gap:10px; margin-top:6px;">
-        <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeCustomConfirm(false)">NO</button>
-        <button class="btn-modal" style="background:#007e33; color:#fff;" onclick="closeCustomConfirm(true)">YES</button>
-      </div>
-    </div>
-  </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:3px;">
+          <label style="font-size:11px; font-weight:bold;">2. Top Right Text (FROM Dett):</label>
+          <textarea id="editTopRight" rows="3" style="padding:5px; font-size:12px; background:#fff; resize:vertical;">FROM
+Dett: N-V-T
+405 RMPL
+74 RCC (GREF)</textarea>
+        </div>
 
-  <div class="modal-overlay" id="searchEmpModal">
-    <div class="modal-window" style="width: 440px; padding: 20px; gap: 12px;">
-      <h3 style="color:#2b579a; text-align:center;">EMPLOYEE DETAILS</h3>
-      <div id="searchEmpContent" style="font-size: 12px; line-height: 1.6; background: #f8f9fa; padding: 12px; border: 1.5px solid #ccc; border-radius: 4px;"></div>
-      <div style="display:flex; justify-content:space-between; gap:10px; margin-top:4px;">
-        <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeModal('searchEmpModal')">CLOSE</button>
-        <button class="btn-modal" id="btnAddSearchedData" style="background:#27ae60; color:#fff;" onclick="addSearchedEmployeeToSheet()">➕ ADD DATA</button>
-      </div>
-    </div>
-  </div>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:3px;">
+          <label style="font-size:11px; font-weight:bold;">3. Center Text (e.g. Countere Signature):</label>
+          <textarea id="editCenter" rows="2" style="padding:5px; font-size:12px; background:#fff; resize:vertical;">Countere Signature</textarea>
+        </div>
 
-  <div class="modal-overlay" id="mrModal">
-    <div class="modal-window" style="width: 400px; padding: 20px; gap: 12px;">
-      <h3 style="color:#2b579a; text-align:center;">CREATE NEW MR SHEET</h3>
-      <div style="display:flex; flex-direction:column; gap:4px; text-align:left;">
-        <label style="font-size:11px; font-weight:bold;">MR No:</label>
-        <select id="modalMrDropdown" style="width:100%; height:32px; padding:4px; font-size:12px; font-weight:bold; border:1.5px solid #ccc; border-radius:4px;">
-          <option value="MR NO. 1">MR NO. 1</option>
-          <option value="MR NO. 2">MR NO. 2</option>
-        </select>
+        <div class="form-group" style="display:flex; flex-direction:column; gap:3px;">
+          <label style="font-size:11px; font-weight:bold;">4. Bottom Left Text (Station & Dated):</label>
+          <textarea id="editBottomLeft" rows="3" style="padding:5px; font-size:12px; background:#fff; resize:vertical;">Station : C/o 99 APO
+
+Dated : ________________ SEP 2026</textarea>
+        </div>
+
+        <div class="form-group" style="display:flex; flex-direction:column; gap:3px;">
+          <label style="font-size:11px; font-weight:bold;">5. Bottom Right Text (Signatory / Officer):</label>
+          <textarea id="editBottomRight" rows="4" style="padding:5px; font-size:12px; background:#fff; resize:vertical;">(Sujit Debnath)
+EE (Civ)
+Officer Commanding
+74 RCC (GREF)</textarea>
+        </div>
+
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
-        <button class="btn-modal" style="background:#666; color:#fff;" onclick="closeModal('mrModal')">CANCEL</button>
-        <button class="btn-modal" style="background:#007e33; color:#fff;" onclick="confirmAddMR()">CREATE</button>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button class="btn-modal" style="background:#888; color:#fff;" onclick="closeModal('doiiEditModal')">CANCEL</button>
+        <button class="btn-modal" style="background:#27ae60; color:#fff;" onclick="saveDOIIEditModal()">SAVE & APPLY</button>
       </div>
     </div>
   </div>
@@ -316,19 +377,11 @@
       "Total days worked", "Rate of\nwages", "Net\nAmt", "BANK A/C NO", "IFS CODE", "Date of Enrolment", "Date of Discharge"
     ];
 
-    let mrSheets = [
-      { label: "MR NO. 1", title: "MR No. 74 RCC/1/SEP 2026, JOB No. JOB NO 101", jobNo: "JOB NO 101", rows: [] },
-      { label: "MR NO. 2", title: "MR No. 74 RCC/2/SEP 2026, JOB No. JOB NO 102", jobNo: "JOB NO 102", rows: [] }
-    ];
+    let mrSheets = [];
     let currentMRIndex = 0;
     let selectedRowIdx = 0;
     let activePeriod = localStorage.getItem("CPL_GLOBAL_MONTH") || "SEP 2026";
     let currentTableViewMode = 1;
-
-    let dlrCustomValues = {
-      section: "E2 Section", hq: "HQ 74 RCC (GREF)", dettTop: "Dett: N-V-T\n405 RMPL\n74 RCC (GREF)",
-      mrNoText: "", jobNoText: "", csText: "C/s", icWorksText: "I/C Work's\nMaint Cell 74 RCC", oicText: "OIC ,AE (Civ)\nMaint Cell 74 RCC \n403 RMPL (GREF)"
-    };
 
     function showAlert(message, isError = false) {
       const toast = document.getElementById("alertToast");
@@ -365,10 +418,15 @@
           }
         } catch(e) {}
       }
-      fetch('/api/master-data').then(res => res.json()).then(res => {
-        if (res.data) { masterData = res.data; populateDatalists(); }
-      }).catch(e => {});
-      renderHeaders(); renderMRTabs(); renderBody();
+      renderHeaders(); 
+      renderMRTabs(); 
+      renderBody();
+
+      // Refresh (F5) karne ke baad bhi DO-II screen khuli rahegi agar data hoga
+      if (mrSheets.length > 0) {
+        loadAndRenderDO2();
+        document.getElementById("screenDOII").style.display = "flex";
+      }
     });
 
     function renderMRTabs() {
@@ -386,182 +444,8 @@
 
     function switchTableView(viewNum) {
       currentTableViewMode = viewNum;
-      document.getElementById("btnView1").className = `btn-view-toggle ${viewNum === 1 ? 'active-view' : ''}`;
-      document.getElementById("btnView2").className = `btn-view-toggle ${viewNum === 2 ? 'active-view' : ''}`;
       renderHeaders(); renderBody();
     }
-
-    function populateDatalists() {
-      const nameDl = document.getElementById("nameOptions");
-      nameDl.innerHTML = "";
-      masterData.forEach(item => {
-        if (item.name) { const opt = document.createElement("option"); opt.value = item.name; nameDl.appendChild(opt); }
-      });
-    }
-
-    let selectedSearchedEmp = null;
-    function onNameSearchInput(val) {
-      const query = val.trim().toLowerCase();
-      if (!query) return;
-      const matchedEmp = masterData.find(d => (d.name || '').toLowerCase() === query);
-      if (matchedEmp) {
-        document.getElementById("nameSearch").value = "";
-        selectedSearchedEmp = matchedEmp;
-        const code = matchedEmp.code || matchedEmp.rowData[1] || '';
-        const name = matchedEmp.name || matchedEmp.rowData[3] || '';
-        const father = matchedEmp.fatherName || matchedEmp.rowData[4] || '';
-        const account = matchedEmp.accountNo || matchedEmp.rowData[15] || '';
-        const recruitmentDate = matchedEmp.enrolmentDate || matchedEmp.rowData[22] || '';
-
-        let duplicateFound = false;
-        let duplicateInfoText = "No (Not in any MR)";
-        mrSheets.forEach(mr => {
-          if (mr.rows) {
-            mr.rows.forEach((r, rIdx) => {
-              if (!r.isGrandTotal) {
-                const rName = String(r.name || r.rowData[3] || '').trim().toLowerCase();
-                if (name && rName === name.toLowerCase()) { duplicateFound = true; duplicateInfoText = `Yes! Found in Sheet: <strong>${mr.label}</strong> at S/No: <strong>${rIdx + 1}</strong>`; }
-              }
-            });
-          }
-        });
-
-        const contentBox = document.getElementById("searchEmpContent");
-        contentBox.innerHTML = `
-          <div><strong>Code:</strong> <span style="color: #007e33; font-weight: 900;">${code}</span></div>
-          <div><strong>Name:</strong> <span style="color: #007e33; font-weight: 900;">${name}</span></div>
-          <div><strong>Father's Name:</strong> <span style="color: #007e33; font-weight: 900;">${father}</span></div>
-          <div><strong>Account No:</strong> <span style="color: #007e33; font-weight: 900;">${account}</span></div>
-          <div><strong>Date of Recruitment:</strong> <span style="color: #007e33; font-weight: 900;">${recruitmentDate}</span></div>
-          <hr style="margin: 8px 0; border: 0; border-top: 1px solid #ccc;">
-          <div><strong>Duplicate Status:</strong> <span style="color: ${duplicateFound ? "#c0392b" : "#007e33"}; font-weight: 900;">${duplicateInfoText}</span></div>
-        `;
-        document.getElementById("searchEmpModal").style.display = "flex";
-      }
-    }
-
-    function addSearchedEmployeeToSheet() {
-      if (!selectedSearchedEmp) { closeModal('searchEmpModal'); return; }
-      const found = selectedSearchedEmp;
-      const rowCopy = new Array(masterHeaders.length).fill('');
-      rowCopy[1] = found.code; rowCopy[2] = found.designation || 'MAZ'; rowCopy[3] = found.name;
-      rowCopy[4] = found.fatherName; rowCopy[5] = found.gender || 'MALE';
-      
-      const sundayDays = ["23", "30", "6", "13", "20"];
-      for (let i = 6; i <= 36; i++) {
-        rowCopy[i] = sundayDays.includes(masterHeaders[i]) ? "SUNDAY" : "P";
-      }
-      rowCopy[40] = found.accountNo; rowCopy[41] = found.ifsCode; rowCopy[42] = found.enrolmentDate; rowCopy[43] = found.dischargeDate || "";
-      applyAutoDashesForNewRow(rowCopy);
-      rowCopy[37] = String(calculateCorrectWorkingDays({ rowData: rowCopy }));
-      rowCopy[38] = calculateRateByTrade(rowCopy[2]);
-      rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
-
-      if (!mrSheets[currentMRIndex].rows) mrSheets[currentMRIndex].rows = [];
-      mrSheets[currentMRIndex].rows.push({ code: found.code, name: found.name, rowData: rowCopy });
-      closeModal('searchEmpModal'); renderBody(); saveToLocal(true);
-      showAlert(`Employee ${found.name} added successfully!`);
-      selectedSearchedEmp = null;
-    }
-
-    function applyAutoDashesForNewRow(rowCopy, rowObj = null) {
-      const recDateStr = rowCopy[42]; const disDateStr = rowCopy[43];
-      let recDayLimit = 0; let disDayLimit = 99;
-      const disFnAnVal = document.getElementById("dischargeFnAn") ? document.getElementById("dischargeFnAn").value : (rowObj?.dischargeFnAn || "F/N");
-
-      if (recDateStr) {
-        let p = recDateStr.split('-');
-        if (p.length === 3) recDayLimit = (p[1].toUpperCase() === 'AUG') ? parseInt(p[0]) : 31 + parseInt(p[0]);
-      }
-      if (disDateStr) {
-        let p = disDateStr.split('-');
-        if (p.length === 3) {
-          let baseLimit = (p[1].toUpperCase() === 'AUG') ? parseInt(p[0]) : 31 + parseInt(p[0]);
-          disDayLimit = (disFnAnVal === 'A/N') ? baseLimit : (baseLimit - 1);
-        }
-      }
-      for (let i = 6; i <= 36; i++) {
-        let absoluteDay = (i <= 16) ? parseInt(masterHeaders[i]) : 31 + parseInt(masterHeaders[i]);
-        if (rowCopy[i] !== 'SUNDAY') {
-          if (recDayLimit > 0 && absoluteDay < recDayLimit) rowCopy[i] = '--';
-          else if (disDayLimit < 99 && absoluteDay > disDayLimit) rowCopy[i] = '--';
-          else if (!rowCopy[i] || rowCopy[i] === '--') rowCopy[i] = 'P';
-        }
-      }
-    }
-
-    function workerMatchesTrade(rowDesig, t) {
-      if (!rowDesig) return false;
-      const parts = String(rowDesig).trim().toUpperCase().split('/');
-      return parts[parts.length - 1].trim() === t;
-    }
-
-    function openDLRWindow() {
-      if (mrSheets.length === 0) { showAlert("Please create or select an MR sheet first!", true); return; }
-      const curMR = mrSheets[currentMRIndex];
-      if (!dlrCustomValues.mrNoText) dlrCustomValues.mrNoText = curMR.title.split(',')[0] || "MR No. 74 RCC/ /SEP 2026";
-      if (!dlrCustomValues.jobNoText) dlrCustomValues.jobNoText = curMR.jobNo || "JOB NO - MAINT. NVTRD";
-      renderDLRContent();
-      document.getElementById("screenDLR").style.display = "flex";
-    }
-
-    function closeDLRWindow() { document.getElementById("screenDLR").style.display = "none"; }
-
-    function renderDLRContent() {
-      const curMR = mrSheets[currentMRIndex];
-      const rows = (curMR.rows || []).filter(r => !r.isGrandTotal);
-      const standardTrades = ["MATE", "SKD-I", "SKD-II", "SKD-III", "CPDVR", "MAZ"];
-      let activeTrades = [];
-      standardTrades.forEach(t => {
-        if (rows.filter(r => workerMatchesTrade(r.rowData[2], t)).length > 0) activeTrades.push(t);
-      });
-
-      let container = document.getElementById("dlrReportContent");
-      let html = `<div style="width: 190mm; margin: 0 auto; background:#fff; padding: 10mm; border:1px solid #ccc; font-family: Arial; font-size: 10px;">
-        <div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px; text-decoration:underline;">SUMMARY OF DLR</div>
-        <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;"><thead><tr style="background:#e0e0e0;"><th rowspan="2" style="border:1px solid #000; padding:2px;">DATE</th><th colspan="${activeTrades.length+1}" style="border:1px solid #000;">ON ROLL</th><th colspan="${activeTrades.length+1}" style="border:1px solid #000;">PRESENT</th></tr><tr style="background:#f0f0f0;">`;
-      activeTrades.forEach(t => html += `<th style="border:1px solid #000;">${t}</th>`);
-      html += `<th style="border:1px solid #000;">TOTAL</th>`;
-      activeTrades.forEach(t => html += `<th style="border:1px solid #000;">${t}</th>`);
-      html += `<th style="border:1px solid #000;">TOTAL</th></tr></thead><tbody>`;
-
-      for (let i = 6; i <= 36; i++) {
-        let dayNum = masterHeaders[i];
-        let isSunday = ["23", "30", "6", "13", "20"].includes(dayNum);
-        html += `<tr><td style="border:1px solid #000; font-weight:bold;">${dayNum}-${i<=16?"Aug":"Sep"}-2026</td>`;
-        if (isSunday) {
-          html += `<td colspan="${(activeTrades.length+1)*2}" style="border:1px solid #000; color:red; font-weight:bold;">SUNDAY</td>`;
-        } else {
-          let totOR = 0, totPr = 0;
-          activeTrades.forEach(t => {
-            let cnt = rows.filter(r => workerMatchesTrade(r.rowData[2], t) && r.rowData[i] !== '--').length;
-            totOR += cnt; html += `<td style="border:1px solid #000;">${cnt}</td>`;
-          });
-          html += `<td style="border:1px solid #000; font-weight:bold;">${totOR}</td>`;
-          activeTrades.forEach(t => {
-            let pCnt = rows.filter(r => workerMatchesTrade(r.rowData[2], t) && r.rowData[i] === 'P').length;
-            totPr += pCnt; html += `<td style="border:1px solid #000;">${pCnt}</td>`;
-          });
-          html += `<td style="border:1px solid #000; font-weight:bold; color:#c0392b;">${totPr}</td>`;
-        }
-        html += `</tr>`;
-      }
-      html += `</tbody></table></div>`;
-      container.innerHTML = html;
-    }
-
-    // ==========================================
-    // DO PART-II ORDER (DO-II) UPDATED LOGIC
-    // ==========================================
-    let do2Groups = [];
-
-    function openDOIIWindow() {
-      if (mrSheets.length === 0) { showAlert("Please create or select an MR sheet first!", true); return; }
-      loadAndRenderDO2();
-      document.getElementById("screenDOII").style.display = "flex";
-    }
-
-    function closeDOIIWindow() { document.getElementById("screenDOII").style.display = "none"; }
 
     function formatToStandardDate(inputDate) {
       if (!inputDate || inputDate === "00-00-0000" || inputDate === "-- Select Date --") return "";
@@ -582,6 +466,35 @@
       if (m === 'AUG') return d >= 21 && d <= 31;
       if (m === 'SEP') return d >= 1 && d <= 20;
       return false;
+    }
+
+    let do2Groups = [];
+
+    function openDOIIWindow() {
+      if (mrSheets.length === 0) { showAlert("Please create or select an MR sheet first!", true); return; }
+      loadAndRenderDO2();
+      document.getElementById("screenDOII").style.display = "flex";
+    }
+
+    function closeDOIIWindow() { document.getElementById("screenDOII").style.display = "none"; }
+
+    function openDOIIEditModal() {
+      document.getElementById("doiiEditModal").style.display = "flex";
+    }
+
+    function saveDOIIEditModal() {
+      document.getElementById("displayTopLeft").innerText = document.getElementById("editTopLeft").value;
+      document.getElementById("displayTopRight").innerText = document.getElementById("editTopRight").value;
+      document.getElementById("displayCenter").innerText = document.getElementById("editCenter").value;
+      document.getElementById("displayBottomLeft").innerText = document.getElementById("editBottomLeft").value;
+      document.getElementById("displayBottomRight").innerText = document.getElementById("editBottomRight").value;
+      
+      closeModal('doiiEditModal');
+      showAlert("DO-II details updated successfully!");
+    }
+
+    function printDOIIReport() {
+      window.print();
     }
 
     function loadAndRenderDO2() {
@@ -616,27 +529,27 @@
 
             if (hasValidDischarge || hasValidEnrolment || hasValidUpgrade) {
               let remarksList = [];
-              let upDateStr = "";
-              let disDateStr = "";
+              let recruitDateCol = "";
+              let dischargeDateCol = "";
+              let upgradeDateCol = "";
 
-              if (hasValidDischarge) {
-                disDateStr = formatToStandardDate(colDischarge);
-                remarksList.push(`Discharged w.e.f. ${disDateStr} (${dischargeFnAn})`);
+              if (hasValidEnrolment) {
+                let encDate = formatToStandardDate(colEnrolment);
+                recruitDateCol = `${encDate} (F/N)`;
+                remarksList.push(`Newly recruited as ${colTrade} w.e.f. ${encDate} (F/N)`);
               }
 
               if (hasValidUpgrade) {
-                upDateStr = "21-Aug-2026";
-                remarksList.push(`Upgraded ${oldTrade} to ${newTrade} w.e.f. ${upDateStr} (F/N)`);
+                upgradeDateCol = `21-Aug-2026 (F/N)`;
+                let actionType = (calculateRateByTrade(newTrade) > calculateRateByTrade(oldTrade)) ? "Upgraded" : "Downgraded";
+                remarksList.push(`${actionType} ${oldTrade} to ${newTrade} w.e.f. 21-Aug-2026 (F/N)`);
               }
 
-              if (!hasValidDischarge && !hasValidUpgrade && hasValidEnrolment) {
-                let encDate = formatToStandardDate(colEnrolment);
-                remarksList.push(`Enrolled as ${colTrade} w.e.f. ${encDate} (F/N)`);
+              if (hasValidDischarge) {
+                let disDateStr = formatToStandardDate(colDischarge);
+                dischargeDateCol = `${disDateStr} (${dischargeFnAn})`;
+                remarksList.push(`Discharged w.e.f. ${disDateStr} (${dischargeFnAn})`);
               }
-
-              // Rule: Recruitment date sirf tabhi likhi jayegi jab Code No. me "NEW" likha ho, warna blank rahegi
-              let isNewEnrolmentCode = colCode.toUpperCase().includes("NEW");
-              let finalRecruitmentDate = (hasValidEnrolment && isNewEnrolmentCode) ? formatToStandardDate(colEnrolment) : "";
 
               matchingRows.push({
                 mrSno: idx + 1,
@@ -645,11 +558,11 @@
                 trade: displayTrade,
                 name: colName,
                 father: colFather,
-                dateRecruit: finalRecruitmentDate,
-                dateDischarge: hasValidDischarge ? `${disDateStr} (${dischargeFnAn})` : "",
+                dateRecruit: recruitDateCol,
+                dateDischarge: dischargeDateCol,
                 dateTfr: "",
-                dateUpgrade: hasValidUpgrade ? `${upDateStr} (F/N)` : "",
-                remark: remarksList.join(" and ")
+                dateUpgrade: upgradeDateCol,
+                remark: remarksList.join(" And ")
               });
             }
           }
@@ -683,7 +596,7 @@
             <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold;">${globalSNo++}</td>
             <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${r.mrSno}</td>
             <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold;">${r.code}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold; color:#007e33;">${r.newCode || ''}</td>
+            <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold; color:#007e33; width:auto; white-space:nowrap;">${r.newCode || ''}</td>
             <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold;">${r.trade}</td>
             <td style="border:1px solid #000; padding:4px 6px; text-align:left; font-weight:bold;">${r.name}</td>
             <td style="border:1px solid #000; padding:4px 6px; text-align:left;">${r.father}</td>
@@ -720,39 +633,6 @@
       XLSX.utils.book_append_sheet(wb, ws, "DO_PART_II");
       XLSX.writeFile(wb, `DO_PART_II_ORDER_${activePeriod.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
     }
-    // ==========================================
-
-    function exportTableToExcel() {
-      if (mrSheets.length === 0) { showAlert("No active sheet to export!", true); return; }
-      const curMR = mrSheets[currentMRIndex];
-      const normalRows = (curMR.rows || []).filter(r => !r.isGrandTotal);
-      const wsData = [[curMR.title], [], masterHeaders.map(h => h.replace(/\n/g, ' '))];
-      normalRows.forEach((r, idx) => {
-        let rowCopy = [...r.rowData]; rowCopy[0] = idx + 1;
-        rowCopy[39] = { t: 'n', f: `AL${4+idx}*AM${4+idx}` };
-        wsData.push(rowCopy);
-      });
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, curMR.label.replace(/[^a-zA-Z0-9]/g, '_'));
-      XLSX.writeFile(wb, `${curMR.label}_${activePeriod}.xlsx`);
-      showAlert("Table exported to Excel successfully!");
-    }
-
-    function exportAllExcelSheets() {
-      if (mrSheets.length === 0) return;
-      const wb = XLSX.utils.book_new();
-      mrSheets.forEach(curMR => {
-        const wsData = [[curMR.title], [], masterHeaders.map(h => h.replace(/\n/g, ' '))];
-        (curMR.rows || []).filter(r => !r.isGrandTotal).forEach((r, idx) => {
-          let rowCopy = [...r.rowData]; rowCopy[0] = idx + 1;
-          rowCopy[39] = { t: 'n', f: `AL${4+idx}*AM${4+idx}` };
-          wsData.push(rowCopy);
-        });
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), curMR.label.replace(/[^a-zA-Z0-9]/g, '_'));
-      });
-      XLSX.writeFile(wb, `All_MR_Sheets_${activePeriod}.xlsx`);
-    }
 
     function renderHeaders() {
       let r1 = "", r2 = "";
@@ -773,7 +653,6 @@
 
       normalRows.forEach((r, idx) => {
         r.rowData[0] = idx + 1;
-        applyAutoDashesForNewRow(r.rowData);
         let days = parseInt(r.rowData[37]) || 31;
         let rate = parseFloat(calculateRateByTrade(r.rowData[2])) || 550;
         r.rowData[38] = String(rate);
@@ -797,16 +676,7 @@
 
     function openMRModal() { document.getElementById("mrModal").style.display = "flex"; }
     function closeModal(id) { document.getElementById(id).style.display = "none"; }
-    function confirmAddMR() {
-      const mrNo = document.getElementById("modalMrDropdown").value;
-      mrSheets.push({ label: mrNo, title: `MR No. 74 RCC/${mrNo.replace(/[^0-9]/g, '')}/SEP 2026`, jobNo: "JOB NO 101", rows: [] });
-      currentMRIndex = mrSheets.length - 1;
-      closeModal("mrModal"); renderMRTabs(); renderBody();
-    }
-    function saveToLocal(silent = false) {
-      localStorage.setItem(`CPL_OFFLINE_SHEETS_${activePeriod}`, JSON.stringify({ mrSheets, lastIndex: currentMRIndex }));
-      if (!silent) showAlert("Data saved!");
-    }
+    function confirmAddMR() { document.getElementById("mrModal").style.display = "none"; }
     function goToHome() { window.location.href = "/login.html"; }
   </script>
 </body>
