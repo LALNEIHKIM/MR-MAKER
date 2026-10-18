@@ -345,7 +345,7 @@
             <button class="btn-action" style="background:#d35400; font-weight:900;">⚙️ OPTIONS ▾</button>
             <div class="dropdown-content">
               <button onclick="openDLRWindow()">📌 DLR Summary</button>
-              <button onclick="openDOIIWindow()">📋 DO Part-II Order</button> <!-- Yeh wala add karna hai -->
+              <button onclick="window.open('/doii.html', '_blank')">📋 DO Part-II Order</button> <!-- Yeh wala add karna hai -->
               <button onclick="exportTableToExcel()">📥 Export to Excel</button>
               <button onclick="exportAllExcelSheets()">📊 All Excel Export</button>
               <button onclick="deleteActiveMR()" style="color:#c0392b;">🗑️ Delete MR</button>
@@ -722,6 +722,10 @@
       renderHeaders();
       renderMRTabs();
       renderBody();
+      
+      // Yeh ensure karega ki payment.html me refresh karne par screenDOII hamesha hidden rahe aur payment workspace hi dikhe
+      const doiiScreen = document.getElementById("screenDOII");
+      if(doiiScreen) doiiScreen.style.display = "none";
     });
 
     function renderMRTabs() {

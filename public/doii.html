@@ -7,256 +7,94 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
-    body { min-height: 100vh; background-color: #332e1d; }
+    body { min-height: 100vh; background-color: #2b271d; }
 
-    #screen2 { display: flex; height: 100vh; background: #332e1d; flex-direction: row; }
-    .sidebar { width: 140px; min-width: 140px; border-right: 2px solid #e0e0e0; padding: 8px 6px; display: flex; flex-direction: column; justify-content: space-between; background: #00796b; }
-    .sidebar-top { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 40vh; }
-    .btn-add-mr { background: linear-gradient(180deg, #fbe3d5 0%, #e2b99f 100%); color: #000000; font-size: 13px; font-weight: 800; padding: 6px 4px; border-radius: 4px; cursor: pointer; text-align: center; border: none; }
-    .btn-mr-tab {
-      background: #ffffff; color: #333333; font-size: 12px; font-weight: 900; padding: 5px 4px; border-radius: 4px; border: 1.5px solid #bbb;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; text-align: center; text-transform: uppercase; word-break: break-all;
-    }
-    .btn-mr-tab.active { background: linear-gradient(180deg, #00c853 0%, #007e33 100%); color: #ffffff; border-top: 1.5px solid #72ff9f; border-bottom: 2.5px solid #004d1f; }
-
-    .sidebar-bottom { display: flex; flex-direction: column; gap: 5px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.2); }
-    .btn-sidebar-fn { background: linear-gradient(180deg, #1b499b 0%, #0d2857 100%); color: #ffffff; font-size: 11px; font-weight: 800; padding: 6px 4px; border: none; border-radius: 4px; cursor: pointer; text-align: center; text-decoration: none; display: block; }
-
-    .workspace-main { flex: 1; padding: 6px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; background: #f4f4f4; }
-    .main-banner { background: linear-gradient(180deg, #2b579a 0%, #153465 100%); color: #ffffff; font-size: 15px; font-weight: 900; text-align: center; padding: 5px; border-radius: 4px; }
-    .search-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; }
-
-    .action-buttons { display: flex; gap: 4px; align-items: center; }
-    .btn-action { font-weight: bold; font-size: 11px; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; color: #ffffff; height: 25px; display: flex; align-items: center; text-decoration: none; }
-
-    .btn-goto-home { background: #2c04f7; }
-    .btn-edit { background: #2980b9; }
-    .btn-undo-redo { background: #f53c17; height: 25px; }
-
-    .btn-view-toggle { background: #6c757d; color: #fff; font-weight: 900; font-size: 11px; border: none; padding: 0 10px; height: 25px; border-radius: 4px; cursor: pointer; }
-    .btn-view-toggle.active-view { background: #007e33 !important; }
-
-    .dropdown { position: relative; display: inline-block; }
-    .dropdown-content { 
-      display: none; position: absolute; right: 0; top: 100%;
-      background-color: #ffffff; min-width: 220px; box-shadow: 0px 8px 24px rgba(0,0,0,0.3); 
-      z-index: 999; border-radius: 6px; border: 2px solid #2b579a; overflow: hidden;
-    }
-    .dropdown-content button { 
-      color: #153465; padding: 10px 14px; text-decoration: none; display: block; width: 100%; 
-      border: none; border-bottom: 1px solid #eef2f7; background: #ffffff; text-align: left; font-size: 11.5px; font-weight: bold; cursor: pointer; 
-    }
-    .dropdown-content button:last-child { border-bottom: none; }
-    .dropdown-content button:hover { background-color: #eef2f7; color: #2b579a; }
-    .dropdown:hover .dropdown-content { display: block; }
-
-    .rs-total-box {
-      background: #ffffff; border: 2px solid #007e33; height: 25px; min-width: 110px; display: flex; align-items: center; padding: 0 6px;
-      font-size: 12px; font-weight: 900; color: #000000; border-radius: 4px; gap: 4px; cursor: pointer;
-    }
-    .rs-total-box span { color: #c0392b; font-size: 13px; }
-
-
-    /* DO-II Table styles ko yeh update dein */
-#screenDOII table {
-  width: 100% !important;
-  table-layout: fixed !important; /* Yeh sabse zaroori hai taaki width force ho */
-  border-collapse: collapse;
-  font-size: 11px;
-}
-
-#screenDOII th, #screenDOII td {
-  border: 1px solid #000;
-  padding: 4px 5px;
-  overflow: hidden;
-  word-wrap: break-word;
-  white-space: normal !important;
-}
-
-    .table-container { flex: 1 1 0px; height: 0; overflow: auto; border: 1.5px solid #000000; background: #ffffff; position: relative; }
-    table { border-collapse: collapse; font-size: 11px; width: max-content; min-width: 100%; }
-    th, td { border: 1px solid #000000; padding: 4px 4px; text-align: left; min-width: 35px; max-width: 120px; }
+    #screenDOII { display: flex; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: #2b271d; z-index: 500; flex-direction: column; padding: 8px 12px; color: #000; }
     
-    thead tr.row-letter th { 
-      background: #f0f0f0; color: #000000; font-size: 11px; font-weight: 900; height: 22px; white-space: nowrap !important; 
-      position: sticky; top: 0; z-index: 10; border-color: #000000 !important;
-    }
-    thead tr.row-name th { 
-      background: #29ee40; color: #00040a; font-size: 9.5px; font-weight: 800; text-transform: uppercase; text-align: center; 
-      white-space: pre-line !important; word-break: break-word !important; vertical-align: middle; 
-      position: sticky; top: 22px; z-index: 10; border-color: #000000 !important;
-    }
-
-    td:nth-child(1) { position: sticky; left: 0px; z-index: 5; background: #ffffff; }
-    td:nth-child(2) { position: sticky; left: 38px; z-index: 5; background: #ffffff; }
-    td:nth-child(3) { position: sticky; left: 93px; z-index: 5; background: #ffffff; }
-    td:nth-child(4) { position: sticky; left: 171px; z-index: 5; background: #ffffff; }
-
-    th:nth-child(1) { position: sticky; left: 0px; z-index: 5; }
-    th:nth-child(2) { position: sticky; left: 38px; z-index: 5; }
-    th:nth-child(3) { position: sticky; left: 93px; z-index: 5; }
-    th:nth-child(4) { position: sticky; left: 171px; z-index: 5; }
-
-    thead tr.row-letter th:nth-child(1), thead tr.row-letter th:nth-child(2), thead tr.row-letter th:nth-child(3), thead tr.row-letter th:nth-child(4) { z-index: 20; background: #f0f0f0; }
-    thead tr.row-name th:nth-child(1), thead tr.row-name th:nth-child(2), thead tr.row-name th:nth-child(3), thead tr.row-name th:nth-child(4) { z-index: 20; background: #29ee40; }
+    #doiiTopBar { background: #ffffff; padding: 5px 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #ccc; flex-shrink: 0; }
     
-    tbody tr { height: 10px; cursor: pointer; }
-    tbody tr:hover { background-color: #f1f7ff; }
-    tbody tr.selected-row { background-color: #2980b9 !important; color: #ffffff !important; }
-    tbody tr.selected-row td { color: #ffffff !important; border-color: #154360 !important; background-color: #2980b9 !important; }
+    .btn-tool { height: 28px; color: #fff; font-size: 11px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; padding: 0 10px; }
 
-    tbody tr.grand-total-row { background-color: #ffffff !important; font-weight: 900 !important; }
-    .td-merged-gtotal { text-align: right !important; font-weight: 900 !important; background-color: #fff3cd !important; color: #000 !important; padding-right: 12px; }
-    .td-gtotal-amount { text-align: center !important; font-weight: 900 !important; color: #c0392b !important; background-color: #fff3cd !important; }
-    tbody td { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    tbody td:nth-child(4), tbody td:nth-child(5) {
-      white-space: nowrap !important; overflow: visible !important; text-overflow: clip !important; min-width: 200px !important;
-    }
-
-    th:nth-child(38), td:nth-child(38) { width: 55px !important; min-width: 55px !important; max-width: 60px !important; text-align: center !important; }
-
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 600; justify-content: center; align-items: center; }
     .modal-window { background: #ffffff; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; }
-    .modal-header { background: #2b579a; color: white; padding: 10px 16px; font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
     .btn-modal { padding: 6px 14px; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; }
 
-    .sunday-merged {
-      color: red !important; font-weight: bold; text-align: center; vertical-align: middle;
-      writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 2px; background-color: #ffffff;
+    #alertToast { position: fixed; top: 20px; right: 20px; background: #27ae60; color: #ffffff; padding: 10px 18px; border-radius: 4px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; display: none; }
+    #alertToast.error { background: #c0392b; }
+
+    /* DO-II Table styles */
+    #screenDOII table {
+      width: 100% !important;
+      table-layout: fixed !important;
+      border-collapse: collapse;
+      font-size: 11px;
     }
 
-   @media print {
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
+    #screenDOII th, #screenDOII td {
+      border: 1px solid #000;
+      padding: 4px 5px;
+      overflow: hidden;
+      word-wrap: break-word;
+      white-space: normal !important;
+    }
 
-  body, html {
-    background: transparent !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 2mm;
+      }
 
-  body * {
-    visibility: hidden !important;
-  }
+      body, html {
+        background: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
 
-  #screenDOII, #screenDOII * {
-    visibility: visible !important;
-  }
+      body * {
+        visibility: hidden !important;
+      }
 
-  #screenDOII {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    background: transparent !important;
-    zoom: 75% !important;
-  }
+      #screenDOII, #screenDOII * {
+        visibility: visible !important;
+      }
 
-  /* Yeh pichhe wale container ki white background/shadow print me hatane ke liye */
-  #screenDOII > div:nth-child(2) {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
+      #screenDOII {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: transparent !important;
+        zoom: 75% !important;
+      }
 
-  #doiiTopBar {
-    display: none !important;
-  }
-}
+      #screenDOII > div:nth-child(2) {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      #doiiTopBar {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div id="alertToast">Success Message</div>
 
-  <!-- MAIN PAYMENT WORKSPACE SCREEN -->
-  <div id="screen2">
-    <div class="sidebar">
-      <div class="sidebar-top">
-        <button class="btn-add-mr" onclick="openMRModal()">ADD MR +</button>
-        <div id="mrTabsContainer" style="display:flex; flex-direction:column; gap:6px;"></div>
-      </div>
-      <div class="sidebar-bottom">
-        <button class="btn-sidebar-fn" onclick="openCodeByModal()">CODE BY</button>
-        <button class="btn-sidebar-fn" onclick="openDaysModal()">DAYS</button>
-      </div>
-    </div>
-
-    <div class="workspace-main">
-      <div class="main-banner" id="mainBanner">PLEASE CREATE / SELECT AN MR SHEET</div>
-      <div class="search-row">
-        <div style="display:flex; gap:6px; align-items:center;">
-          <input type="text" id="nameSearch" list="nameOptions" placeholder="Search NAME..." oninput="onNameSearchInput(this.value)" style="height:20px; padding:2px; border:1.5px solid #ccc; border-radius:4px; width:150px;">
-          <datalist id="nameOptions"></datalist>
-          
-          <button class="btn-action" style="background:#e67e22; font-weight:900;" onclick="openFindModal()">🔍 FIND</button>
-          <button class="btn-action btn-undo-redo" onclick="undoAction()" title="Undo">↩️</button>
-          <button class="btn-action btn-undo-redo" onclick="redoAction()" title="Redo">↪️</button>
-          
-          <div style="display:flex; gap:3px; margin-left:4px;">
-            <button class="btn-view-toggle active-view" id="btnView1" onclick="switchTableView(1)">View 1</button>
-            <button class="btn-view-toggle" id="btnView2" onclick="switchTableView(2)">View 2</button>
-          </div>
-
-          <div class="rs-total-box" onclick="insertGrandTotalRow()" title="Click to insert/update G/TOTAL row">
-            G/TOTAL Rs <span id="grandTotalDisplay">0</span>
-          </div>
-        </div>
-
-        <div class="action-buttons">
-          <div class="rs-total-box" style="border-color: #2980b9; gap: 3px; padding: 0 4px;" title="Manual Range Page-Total">
-            <span style="font-size:10.5px;">Page-Total S/No:</span>
-            <input type="number" id="pageTotalFrom" value="1" min="1" oninput="renderBody()" style="width: 32px; height: 18px; font-size: 11px; text-align: center; border: 1px solid #ccc; border-radius: 2px;">
-            <span style="font-size:10px;">to</span>
-            <input type="number" id="pageTotalTo" value="20" min="1" oninput="renderBody()" style="width: 32px; height: 18px; font-size: 11px; text-align: center; border: 1px solid #ccc; border-radius: 2px;">
-            <span style="color:#c0392b; font-size:11.5px; margin-left:2px;" id="pageTotalDisplay">0</span>
-          </div>
-
-          <button class="btn-action btn-edit" id="btnEditRow" onclick="openEditModal()">✏️ EDIT INDL</button>
-          
-          <div class="dropdown">
-            <button class="btn-action" style="background:#d35400; font-weight:900;">⚙️ OPTIONS ▾</button>
-            <div class="dropdown-content">
-              <button onclick="openDLRWindow()">📌 DLR Summary</button>
-              <button onclick="openDOIIWindow()">📋 DO Part-II Order</button>
-              <button onclick="exportTableToExcel()">📥 Export to Excel</button>
-              <button onclick="exportAllExcelSheets()">📊 All Excel Export</button>
-              <button onclick="deleteActiveMR()" style="color:#c0392b;">🗑️ Delete MR</button>
-              <button onclick="changeRowFontColorModal()">🎨 Row Font Colour Changed</button>
-              <button onclick="changeRowHighlightColorModal()">🖌️ Row Highlight Colour Changed</button>
-            </div>
-          </div>
-
-          <button class="btn-action btn-goto-home" onclick="goToHome()">🏠 HOME</button>
-        </div>
-      </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr class="row-letter" id="letterHead"></tr>
-            <tr class="row-name" id="nameHead"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
   <!-- DO PART-II ORDER FULL SCREEN WINDOW -->
-  <div id="screenDOII" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#2b271d; z-index:500; flex-direction:column; padding:8px 12px; color:#000;">
-    <div id="doiiTopBar" style="background:#ffffff; padding:5px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; box-shadow:0 4px 10px rgba(0,0,0,0.3); border:1px solid #ccc; flex-shrink:0;">
+  <div id="screenDOII">
+    <div id="doiiTopBar">
       <div style="display:flex; gap:6px;">
-        <button class="btn-tool" style="background:#16a085; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="exportDO2Excel()">📊 EXPORT DO-II EXCEL (.XLSX)</button>
-        <button class="btn-tool" style="background:#27ae60; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="printDOIIReport()">🖨️ PRINT</button>
-        <button class="btn-tool" style="background:#d35400; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="openDOIIEditModal()">✏️ EDIT VIEW</button>
+        <button class="btn-tool" style="background:#16a085;" onclick="exportDO2Excel()">📊 EXPORT DO-II EXCEL (.XLSX)</button>
+        <button class="btn-tool" style="background:#27ae60;" onclick="printDOIIReport()">🖨️ PRINT</button>
+        <button class="btn-tool" style="background:#d35400;" onclick="openDOIIEditModal()">✏️ EDIT VIEW</button>
       </div>
-      <button class="btn-tool" style="background:#2980b9; height:28px; color:#fff; font-size:11px; font-weight:bold; border:none; border-radius:4px; cursor:pointer; padding:0 10px;" onclick="closeDOIIWindow()">🔙 Go To Payment</button>
+      <button class="btn-tool" style="background:#2980b9;" onclick="closeDOIIWindow()">🔙 Go To Payment</button>
     </div>
 
     <div style="background:#ffffff; border-radius:4px; padding:12px; box-shadow:0 4px 15px rgba(0,0,0,0.4); flex:1; display:flex; flex-direction:column; overflow-y:auto;">
@@ -280,31 +118,30 @@ Dett: N-V-T
 
       <!-- TABLE CONTAINER -->
       <div style="width:100%; border:1px solid #000; background:#fff; margin-bottom:15px;">
-        <table style="width:100%; border-collapse:collapse; font-size:11px;">
-     <thead>
-  <tr style="background:#ffffff;">
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 4%;">S/No</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 5%;">MR S/NO</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 6%;">CODE</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 6%;">NEW CODE</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 7%;">TRADE</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 14%;">NAME</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 14%;">FATHER'S NAME</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 9%;">DATE OF RECRUITMENT</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 9%;">DATE OF DISCHARGE</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 5%;">DATE OF TFR</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 9%;">UPGRADATION/ DOWNGRADATION</th>
-    <th style="border:1px solid #000; padding:4px 4px; text-align:center; width: 25%;">REMARKS</th>
-  </tr>
-</thead>
+        <table>
+          <thead>
+            <tr style="background:#ffffff;">
+              <th style="text-align:center; width: 4%;">S/No</th>
+              <th style="text-align:center; width: 6%;">MR S/NO</th>
+              <th style="text-align:center; width: 6%;">CODE</th>
+              <th style="text-align:center; width: 8%;">TRADE</th>
+              <th style="text-align:center; width: 14%;">NAME</th>
+              <th style="text-align:center; width: 14%;">FATHER'S NAME</th>
+              <th style="text-align:center; width: 9%;">DATE OF RECRUITMENT</th>
+              <th style="text-align:center; width: 9%;">DATE OF DISCHARGE</th>
+              <th style="text-align:center; width: 6%;">DATE OF TFR</th>
+              <th style="text-align:center; width: 9%;">UPGRADATION/ DOWNGRADATION</th>
+              <th style="text-align:center; width: 20%;">REMARKS</th>
+            </tr>
+          </thead>
           <tbody id="do2TableBody"></tbody>
         </table>
       </div>
 
       <!-- CENTER & BOTTOM FOOTER LAYOUT -->
       <div style="display:flex; justify-content:center; align-items:center; margin-top: 180px; margin-bottom: 10px; font-size:12px; font-weight:bold;">
-  <div id="displayCenter" style="white-space: pre-line; text-align:center;">Countere Signature</div>
-</div>
+        <div id="displayCenter" style="white-space: pre-line; text-align:center;">Countere Signature</div>
+      </div>
 
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto; padding-top:10px; font-size:11px; font-weight:bold;">
         <div id="displayBottomLeft" style="white-space: pre-line;">Station : C/o 99 APO
@@ -319,7 +156,7 @@ Officer Commanding
   </div>
 
   <!-- EDIT VIEW MODAL WITH 5 TEXTAREAS -->
-  <div class="modal-overlay" id="doiiEditModal" style="z-index: 600;">
+  <div class="modal-overlay" id="doiiEditModal">
     <div class="modal-window" style="width: 520px; padding: 20px; gap: 12px;">
       <h3 style="color:#2b579a; text-align:center;">EDIT DO-II 5 LOCATIONS & HEADERS</h3>
       <div style="display:flex; flex-direction:column; gap:8px; max-height:65vh; overflow-y:auto; padding-right:4px; text-align:left;">
@@ -368,20 +205,8 @@ Officer Commanding
   </div>
 
   <script>
-    let masterData = [];
-    let masterHeaders = [
-      "Sl.No.", "Code No.", "Designation", "Name\n(in Capital Letters)", "Father's/Husband's Name\n(in Capital letters)", "Gender",
-      "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",
-      "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
-      "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
-      "Total days worked", "Rate of\nwages", "Net\nAmt", "BANK A/C NO", "IFS CODE", "Date of Enrolment", "Date of Discharge"
-    ];
-
     let mrSheets = [];
-    let currentMRIndex = 0;
-    let selectedRowIdx = 0;
     let activePeriod = localStorage.getItem("CPL_GLOBAL_MONTH") || "SEP 2026";
-    let currentTableViewMode = 1;
 
     function showAlert(message, isError = false) {
       const toast = document.getElementById("alertToast");
@@ -414,38 +239,11 @@ Officer Commanding
           const parsed = JSON.parse(localData);
           if (parsed.mrSheets && parsed.mrSheets.length > 0) {
             mrSheets = parsed.mrSheets;
-            currentMRIndex = parsed.lastIndex || 0;
           }
         } catch(e) {}
       }
-      renderHeaders(); 
-      renderMRTabs(); 
-      renderBody();
-
-      // Refresh (F5) karne ke baad bhi DO-II screen khuli rahegi agar data hoga
-      if (mrSheets.length > 0) {
-        loadAndRenderDO2();
-        document.getElementById("screenDOII").style.display = "flex";
-      }
+      loadAndRenderDO2();
     });
-
-    function renderMRTabs() {
-      const container = document.getElementById("mrTabsContainer");
-      container.innerHTML = "";
-      mrSheets.forEach((mr, idx) => {
-        const tab = document.createElement("div");
-        tab.className = `btn-mr-tab ${idx === currentMRIndex ? 'active' : ''}`;
-        tab.innerText = mr.label; 
-        tab.onclick = () => { currentMRIndex = idx; renderMRTabs(); renderBody(); };
-        container.appendChild(tab);
-      });
-      if (mrSheets[currentMRIndex]) document.getElementById("mainBanner").innerText = mrSheets[currentMRIndex].title;
-    }
-
-    function switchTableView(viewNum) {
-      currentTableViewMode = viewNum;
-      renderHeaders(); renderBody();
-    }
 
     function formatToStandardDate(inputDate) {
       if (!inputDate || inputDate === "00-00-0000" || inputDate === "-- Select Date --") return "";
@@ -470,17 +268,8 @@ Officer Commanding
 
     let do2Groups = [];
 
-    function openDOIIWindow() {
-      if (mrSheets.length === 0) { showAlert("Please create or select an MR sheet first!", true); return; }
-      loadAndRenderDO2();
-      document.getElementById("screenDOII").style.display = "flex";
-    }
-
-    function closeDOIIWindow() { document.getElementById("screenDOII").style.display = "none"; }
-
-    function openDOIIEditModal() {
-      document.getElementById("doiiEditModal").style.display = "flex";
-    }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    function openDOIIEditModal() { document.getElementById("doiiEditModal").style.display = "flex"; }
 
     function saveDOIIEditModal() {
       document.getElementById("displayTopLeft").innerText = document.getElementById("editTopLeft").value;
@@ -493,8 +282,14 @@ Officer Commanding
       showAlert("DO-II details updated successfully!");
     }
 
-    function printDOIIReport() {
-      window.print();
+    function printDOIIReport() { window.print(); }
+
+    function closeDOIIWindow() {
+      if (window.opener) {
+        window.close();
+      } else {
+        window.location.href = "/payment.html";
+      }
     }
 
     function loadAndRenderDO2() {
@@ -514,13 +309,14 @@ Officer Commanding
             const dischargeFnAn = r.dischargeFnAn || "F/N";
 
             let isUpgraded = colTrade.includes('/');
-            let displayTrade = colTrade;
+            let displayTrade = colTrade; // Default poora trade dikhega (jaise MAZ/SKD-II)
             let oldTrade = "", newTrade = "";
+            
             if (isUpgraded) {
               const parts = colTrade.split('/');
               oldTrade = parts[0].trim();
               newTrade = parts[1].trim();
-              displayTrade = newTrade;
+              displayTrade = colTrade; // Trade column me MAZ/SKD-II show hoga
             }
 
             let hasValidDischarge = colDischarge && isDateWithinPeriod(colDischarge);
@@ -535,27 +331,29 @@ Officer Commanding
 
               if (hasValidEnrolment) {
                 let encDate = formatToStandardDate(colEnrolment);
-                recruitDateCol = `${encDate} (F/N)`;
-                remarksList.push(`Newly recruited as ${colTrade} w.e.f. ${encDate} (F/N)`);
+                recruitDateCol = encDate;
+                remarksList.push(`Newly recruited as ${colTrade} w.e.f. ${encDate} (${dischargeFnAn})`);
               }
 
               if (hasValidUpgrade) {
-                upgradeDateCol = `21-Aug-2026 (F/N)`;
+                // Agar user ne date blank rakhi hai toh default 21-Aug-2026 aayega
+                let upDateStr = r.upgradeDate || "21-Aug-2026"; 
+                upgradeDateCol = upDateStr;
+                
                 let actionType = (calculateRateByTrade(newTrade) > calculateRateByTrade(oldTrade)) ? "Upgraded" : "Downgraded";
-                remarksList.push(`${actionType} ${oldTrade} to ${newTrade} w.e.f. 21-Aug-2026 (F/N)`);
+                remarksList.push(`${actionType} ${oldTrade} to ${newTrade} w.e.f. ${upDateStr} (F/N)`);
               }
 
               if (hasValidDischarge) {
                 let disDateStr = formatToStandardDate(colDischarge);
-                dischargeDateCol = `${disDateStr} (${dischargeFnAn})`;
+                dischargeDateCol = disDateStr;
                 remarksList.push(`Discharged w.e.f. ${disDateStr} (${dischargeFnAn})`);
               }
 
               matchingRows.push({
                 mrSno: idx + 1,
                 code: colCode,
-                newCode: "",
-                trade: displayTrade,
+                trade: displayTrade, // Ab yahan MAZ/SKD-II aayega
                 name: colName,
                 father: colFather,
                 dateRecruit: recruitDateCol,
@@ -581,30 +379,29 @@ Officer Commanding
       let globalSNo = 1;
 
       if (do2Groups.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" style="padding:20px; color:#666; text-align:center;">No movement records found within the active period (21 Aug to 20 Sep 2026).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="padding:20px; color:#666; text-align:center;">No movement records found within the active period (21 Aug to 20 Sep 2026).</td></tr>`;
         return;
       }
 
       do2Groups.forEach((group) => {
         const headTr = document.createElement("tr");
-        headTr.innerHTML = `<td colspan="12" style="background:#f8f9fa; text-align:left; font-weight:900; font-style:italic; text-decoration:underline; padding:5px 8px;">${group.mrHeading}</td>`;
+        headTr.innerHTML = `<td colspan="11" style="background:#f8f9fa; text-align:left; font-weight:900; font-style:italic; text-decoration:underline; padding:5px 8px;">${group.mrHeading}</td>`;
         tbody.appendChild(headTr);
 
         group.rows.forEach((r) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold;">${globalSNo++}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${r.mrSno}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold;">${r.code}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold; color:#007e33; width:auto; white-space:nowrap;">${r.newCode || ''}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center; font-weight:bold;">${r.trade}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:left; font-weight:bold;">${r.name}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:left;">${r.father}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${r.dateRecruit}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${r.dateDischarge}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${r.dateTfr}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${r.dateUpgrade}</td>
-            <td style="border:1px solid #000; padding:4px 6px; text-align:left; font-size:10.5px; white-space: normal; word-break: break-word;">${r.remark}</td>
+            <td style="text-align:center; font-weight:bold;">${globalSNo++}</td>
+            <td style="text-align:center;">${r.mrSno}</td>
+            <td style="text-align:center; font-weight:bold;">${r.code}</td>
+            <td style="text-align:center; font-weight:bold;">${r.trade}</td>
+            <td style="text-align:left; font-weight:bold;">${r.name}</td>
+            <td style="text-align:left;">${r.father}</td>
+            <td style="text-align:center;">${r.dateRecruit}</td>
+            <td style="text-align:center;">${r.dateDischarge}</td>
+            <td style="text-align:center;">${r.dateTfr}</td>
+            <td style="text-align:center;">${r.dateUpgrade}</td>
+            <td style="text-align:left; font-size:10.5px;">${r.remark}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -617,14 +414,14 @@ Officer Commanding
         ["RESTRICTED"], [`SUMMARY OF DETT DO-II FOR THE MONTH OF ${activePeriod}`], ["BY"],
         ["E2 Section, HQ 74 RCC (GREF), Dett: N-V-T, 405 RMPL, 74 RCC (GREF)"], [],
         [`(SUMMARY OF DETT DO-II FOR THE MONTH OF ${activePeriod})`], [],
-        ["S/No", "MR S/NO", "CODE", "NEW CODE", "TRADE", "NAME", "FATHER'S NAME", "DATE OF RECRUITMENT", "DATE OF DISCHARGED", "DATE OF TFR", "DATE OF UPGRADATION", "REMARKS"]
+        ["S/No", "MR S/NO", "CODE", "TRADE", "NAME", "FATHER'S NAME", "DATE OF RECRUITMENT", "DATE OF DISCHARGED", "DATE OF TFR", "DATE OF UPGRADATION", "REMARKS"]
       ];
 
       let globalNo = 1;
       do2Groups.forEach(grp => {
         wsData.push([grp.mrHeading]);
         grp.rows.forEach(r => {
-          wsData.push([globalNo++, r.mrSno, r.code, r.newCode, r.trade, r.name, r.father, r.dateRecruit, r.dateDischarge, r.dateTfr, r.dateUpgrade, r.remark]);
+          wsData.push([globalNo++, r.mrSno, r.code, r.trade, r.name, r.father, r.dateRecruit, r.dateDischarge, r.dateTfr, r.dateUpgrade, r.remark]);
         });
       });
 
@@ -633,51 +430,6 @@ Officer Commanding
       XLSX.utils.book_append_sheet(wb, ws, "DO_PART_II");
       XLSX.writeFile(wb, `DO_PART_II_ORDER_${activePeriod.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
     }
-
-    function renderHeaders() {
-      let r1 = "", r2 = "";
-      for (let i = 0; i < masterHeaders.length; i++) {
-        let dStyle = (currentTableViewMode === 2 && i >= 5 && i <= 36) ? 'style="display:none;"' : '';
-        r1 += `<th ${dStyle}>${String.fromCharCode(65 + (i < 26 ? i : i - 26))}</th>`;
-        r2 += `<th ${dStyle}>${(masterHeaders[i] || '').replace(/\n/g, '<br>')}</th>`;
-      }
-      document.getElementById("letterHead").innerHTML = r1;
-      document.getElementById("nameHead").innerHTML = r2;
-    }
-
-    function renderBody() {
-      const tbody = document.getElementById("tableBody"); tbody.innerHTML = "";
-      if (mrSheets.length === 0) return;
-      const normalRows = (mrSheets[currentMRIndex].rows || []).filter(r => !r.isGrandTotal);
-      let grandTotal = 0;
-
-      normalRows.forEach((r, idx) => {
-        r.rowData[0] = idx + 1;
-        let days = parseInt(r.rowData[37]) || 31;
-        let rate = parseFloat(calculateRateByTrade(r.rowData[2])) || 550;
-        r.rowData[38] = String(rate);
-        r.rowData[39] = String(days * rate);
-        grandTotal += (days * rate);
-      });
-
-      normalRows.forEach((r, actualIdx) => {
-        const tr = document.createElement("tr");
-        if (actualIdx === selectedRowIdx) tr.classList.add("selected-row");
-        tr.onclick = () => { selectedRowIdx = actualIdx; renderBody(); };
-        let html = "";
-        for (let c = 0; c < masterHeaders.length; c++) {
-          let dStyle = (currentTableViewMode === 2 && c >= 5 && c <= 36) ? 'style="display:none;"' : '';
-          html += `<td ${dStyle}>${r.rowData[c] || ''}</td>`;
-        }
-        tr.innerHTML = html; tbody.appendChild(tr);
-      });
-      document.getElementById("grandTotalDisplay").innerText = Number(grandTotal).toLocaleString('en-IN');
-    }
-
-    function openMRModal() { document.getElementById("mrModal").style.display = "flex"; }
-    function closeModal(id) { document.getElementById(id).style.display = "none"; }
-    function confirmAddMR() { document.getElementById("mrModal").style.display = "none"; }
-    function goToHome() { window.location.href = "/login.html"; }
   </script>
 </body>
 </html>
