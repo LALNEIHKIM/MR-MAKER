@@ -455,27 +455,44 @@
   </div>
 
   <!-- MR MODAL -->
+  <!-- MR MODAL -->
   <div class="modal-overlay" id="mrModal">
-    <div class="modal-window" style="width: 400px; padding: 20px; gap: 12px;">
+    <div class="modal-window" style="width: 480px; padding: 20px; gap: 12px;">
       <h3 style="color:#2b579a; text-align:center;">CREATE NEW MR SHEET</h3>
+      
+      <!-- MR No. ka Dropdown -->
       <div style="display:flex; flex-direction:column; gap:4px; text-align:left;">
-        <label style="font-size:11px; font-weight:bold;">MR No:</label>
-        <select id="modalMrDropdown" onchange="onModalMrSelectChange(this.value)" style="width:100%; height:32px; padding:4px; font-size:12px; font-weight:bold; border:1.5px solid #ccc; border-radius:4px;">
-          <option value="MR NO. 1">MR NO. 1</option>
-          <option value="MR NO. 2">MR NO. 2</option>
-          <option value="MR NO. 3">MR NO. 3</option>
-          <option value="MR NO. 4">MR NO. 4</option>
-          <option value="MR NO. 5">MR NO. 5</option>
-          <option value="MR NO. 6">MR NO. 6</option>
-          <option value="MR NO. 7">MR NO. 7</option>
-          <option value="MR NO. 8">MR NO. 8</option>
-          <option value="MR NO. 9">MR NO. 9</option>
-          <option value="MR NO. 10">MR NO. 10</option>
-          <option value="MR NO. 11">MR NO. 11</option>
-          <option value="MR NO. 12">MR NO. 12</option>
-        </select>
+        <label style="font-size:11px; font-weight:bold;">Select MR No:</label>
+    <select id="modalMrDropdown" onchange="onModalMrSelectChange(this.value)">
+  <option value="MR NO. 374">MR NO. 374</option>
+  <option value="MR NO. 375">MR NO. 375</option>
+  <option value="MR NO. 9">MR NO. 9</option>
+  <option value="MR NO. 380">MR NO. 380</option>
+  <option value="MR NO. 376">MR NO. 376</option>
+  <option value="MR NO. 41">MR NO. 41</option>
+  <option value="MR NO. 377">MR NO. 377</option>
+  <option value="MR NO. 378">MR NO. 378</option>
+  <option value="MR NO. 8">MR NO. 8</option>
+  <option value="MR NO. 379">MR NO. 379</option>
+  <option value="MR NO. 381">MR NO. 381</option>
+  <option value="MR NO. 27">MR NO. 27</option>
+  <option value="MR NO. 28">MR NO. 28</option>
+  <option value="MR NO. 29">MR NO. 29</option>
+  <option value="MR NO. 30">MR NO. 30</option>
+  <option value="MR NO. 31">MR NO. 31</option>
+  <option value="MR NO. 32">MR NO. 32</option>
+  <option value="MR NO. 33">MR NO. 33</option>
+  <option value="MR NO. 34">MR NO. 34</option>
+  <option value="MR NO. 35">MR NO. 35</option>
+  <option value="MR NO. 36">MR NO. 36</option>
+  <option value="MR NO. 37">MR NO. 37</option>
+  <option value="MR NO. 38">MR NO. 38</option>
+  <option value="MR NO. 39">MR NO. 39</option>
+  <option value="MR NO. 40">MR NO. 40</option>
+</select>
       </div>
-      <div style="display:flex; flex-direction:column; gap:4px; text-align:left;">
+
+        <div style="display:flex; flex-direction:column; gap:4px; text-align:left;">
         <label style="font-size:11px; font-weight:bold;">JOB No (Automatic):</label>
         <input type="text" id="modalJobInput" value="JOB NO 101" readonly style="width:100%; height:32px; padding:4px; border:1.5px solid #ccc; border-radius:4px; font-size:11.5px; background:#e9ecef;">
       </div>
@@ -1532,41 +1549,84 @@
       document.getElementById("nameHead").innerHTML = r2;
     }
 
-    function openMRModal() {
-      const modalDropdown = document.getElementById("modalMrDropdown");
-      modalDropdown.innerHTML = "";
-      for(let i=1; i<=12; i++) {
-        const opt = document.createElement("option");
-        opt.value = `MR NO. ${i}`;
-        opt.innerText = `MR NO. ${i}`;
-        if(i === mrSheets.length + 1) opt.selected = true;
-        modalDropdown.appendChild(opt);
-      }
-      const initialNum = mrSheets.length + 1;
-      document.getElementById("modalJobInput").value = `JOB NO 10${initialNum}`;
-      document.getElementById("mrModal").style.display = "flex";
-    }
+   // Har MR No. ka apna fix lamba Job No. yahan define hai
+const mrJobMapping = {
+  'MR NO. 374': "ADG (B)/BFR Cell/A/A & E/S/2024/832 FMN",
+  'MR NO. 375': "ADG (B)/BFR Cell/A/A & E/S/2024/831 FMN",
+  'MR NO. 9': "Maint CHK Road (2026-27) Km 0.00 to 10.00",
+  'MR NO. 380': "80/515 (PSK)",
+  'MR NO. 376': "Maint CHK Road (2026-27) Km 10.00 to 75.50",
+  'MR NO. 41': "710-A/50 Rehab CHK road (PMT)",
+  'MR NO. 377': "710-A/52 (24 TF)",
+  'MR NO. 378': "Maint K-V-K Road (2026-27)",
+  'MR NO. 8': "Maint DVF (2026-27) KM 0.00 to 35.20",
+  'MR NO. 379': "Maint FT KM 0.00 to 10.775 (2026-27)",
+  'MR NO. 381': "Maint NVT Road (2026-27) KM 0-45.358",
+  'MR NO. 27': "L-3307/07 TBSPS road (Pmt)",
+  'MR NO. 28': "L-3307/07 TBSPS road (Surf)",
+  'MR NO. 29': "L-3307/10 TBSPS road (Fmn)",
+  'MR NO. 30': "L-3307/10 TBSPS road (PMT)",
+  'MR NO. 31': "L-3307/12 (DPR)",
+  'MR NO. 32': "Maint S-T Road (2026-27) KM 82.00-164.53",
+  'MR NO. 33': "709/157 (Fmn)",
+  'MR NO. 34': "709/157 (PMT)",
+  'MR NO. 35': "Maint K-D-A Road (2026-27) KM 31.12-42.00",
+  'MR NO. 36': "Maint S-T Road (2026-27)",
+  'MR NO. 37': "ADG(B)/BFR Cell/A/A & E/S/2024/832 FMN",
+  'MR NO. 38': "ADG(B)/BFR Cell/A/A & E/S/2024/832 SURF",
+  'MR NO. 39': "ADG(B)/BFR Cell/A/A & E/S/2024/831 FMN",
+  'MR NO. 40': "ADG(B)/BFR Cell/A/A & E/S/2024/831 SURF"
+};
 
-    function onModalMrSelectChange(val) {
-      const num = val.replace(/[^0-9]/g, '');
-      document.getElementById("modalJobInput").value = `JOB NO 10${num}`;
-    }
+function openMRModal() {
+  const modalDropdown = document.getElementById("modalMrDropdown");
+  if (modalDropdown.options.length > 0) {
+    modalDropdown.selectedIndex = 0; // Pehla option select rahega by default
+    onModalMrSelectChange(modalDropdown.value); // Ussi ke mutabiq job no. load kar do
+  }
+  document.getElementById("mrModal").style.display = "flex";
+}
+
+// Jaise hi aap dropdown se MR No. badlenge, yeh automatic uska sahi job no. utha lega
+function onModalMrSelectChange(selectedMr) {
+  const jobInput = document.getElementById("modalJobInput");
+  if (mrJobMapping[selectedMr]) {
+    jobInput.value = mrJobMapping[selectedMr];
+  } else {
+    jobInput.value = "JOB NO 101"; // Default agar koi aur ho toh
+  }
+}
+
+function confirmAddMR() {
+  pushUndoState();
+  
+  const selectedMrNo = document.getElementById("modalMrDropdown").value;
+  const assignedJobNo = document.getElementById("modalJobInput").value;
+
+  // Check karo ki yeh MR pehle se toh nahi bana hua
+  const alreadyExists = mrSheets.some(m => m.label === selectedMrNo);
+  if (alreadyExists) {
+    showAlert(`${selectedMrNo} pehle se hi bani hui hai!`, true);
+    return;
+  }
+
+  // Nayi sheet wahi selected MR No. aur uske automatic Job No. ke sath ban jayegi
+  mrSheets.push({ 
+    label: selectedMrNo, 
+    title: `${selectedMrNo}, JOB No. ${assignedJobNo}`, 
+    jobNo: assignedJobNo, 
+    rows: [] 
+  });
+
+  currentMRIndex = mrSheets.length - 1;
+  closeModal("mrModal");
+  saveToLocal(true);
+  renderMRTabs();
+  renderBody();
+  showAlert("MR created successfully!");
+}
 
     function closeModal(id) { document.getElementById(id).style.display = "none"; }
-    
-    function confirmAddMR() {
-      pushUndoState();
-      const selectedMrNo = document.getElementById("modalMrDropdown").value;
-      const jobInputVal = document.getElementById("modalJobInput").value.trim();
-
-      mrSheets.push({ label: selectedMrNo, title: `MR No. 74 RCC/${selectedMrNo.replace(/[^0-9]/g, '')}/SEP 2026, JOB No. ${jobInputVal}`, jobNo: jobInputVal, rows: [] });
-      currentMRIndex = mrSheets.length - 1;
-      closeModal("mrModal");
-      saveToLocal(true);
-      renderMRTabs();
-      renderBody();
-      showAlert("MR created successfully!");
-    }
 
     function openCodeByModal() {
       if (mrSheets.length === 0) { showAlert("Please create an MR sheet first!", true); return; }
