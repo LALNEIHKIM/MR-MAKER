@@ -147,6 +147,15 @@
     .form-group label { font-size: 11px; font-weight: bold; }
     .form-group input, .form-group select, .form-group textarea { padding: 5px 8px; font-size: 12px; border: 1.5px solid #ccc; border-radius: 4px; background-color: #e9ecef; }
     .form-group input.editable-field, .form-group select.editable-field { background-color: #fff !important; border-color: #2b579a !important; }
+    #editGridView { display:none; flex:1; min-height:0; flex-direction:column; background:#fff; padding:10px; gap:8px; }
+    .payment-grid-wrap { overflow:auto; flex:1; border:1px solid #9aa8b8; }
+    .payment-grid { border-collapse:collapse; width:max-content; min-width:100%; table-layout:fixed; font-family:Arial,sans-serif; font-size:12px; }
+    .payment-grid th { position:sticky; top:0; z-index:2; background:#dce6f1; color:#18365f; border:1px solid #aab7c4; padding:6px 8px; white-space:nowrap; text-align:left; font-weight:normal; }
+    .payment-grid td { border:1px solid #c5ccd3; padding:4px 7px; height:28px; white-space:nowrap; background:#fff; overflow:visible; }
+    .payment-grid td.rownum { min-width:42px; width:42px; text-align:center; background:#eef2f7; font-weight:bold; padding:4px; position:sticky; left:0; z-index:1; }
+    .payment-grid td.grid-cell { cursor:cell; outline:none; }
+    .payment-grid td.grid-cell:focus { outline:2px solid #2b579a; outline-offset:-2px; background:#fffbe6; }
+    .grid-help { color:#34495e; font-size:12px; }
 
     #editCalendarView {
       display: none; 
@@ -584,6 +593,7 @@
         <div style="display:flex; flex:1;">
           <button class="edit-tab-btn active" id="tabBtnDetails" onclick="switchEditTab('details')">📋 Employee Details</button>
           <button class="edit-tab-btn" id="tabBtnCalendar" onclick="switchEditTab('calendar')">📅 Attendance Calendar & Lifecycle Settings</button>
+          <button class="edit-tab-btn" id="tabBtnGrid" onclick="switchEditTab('grid')">▦ PAYMENT GRID</button>
         </div>
         <button class="btn-modal" id="btnToggleEditMode" style="background:#d35400; color:#white; padding: 4px 10px;" onclick="toggleEditMode()">🔓 EDIT DATA</button>
       </div>
@@ -607,6 +617,11 @@
         </div>
       </div>
 
+      <div id="editGridView">
+        <div class="grid-help"><b>Excel-style Payment Grid</b> — Edit cells directly. Enter = next row, Tab/Right Arrow = next cell, Left Arrow = previous cell. Excel cells copied with tabs/newlines can be pasted starting at any selected cell. Visible columns: A–E and AL–AR.</div>
+        <div class="payment-grid-wrap" id="paymentGridWrap"></div>
+      </div>
+
       <div style="padding: 10px 16px; background:#fff; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #ccc;">
         <div style="display:flex; gap:6px;">
           <button class="btn-modal" style="background:#dc3545; color:white;" onclick="deleteCurrentRow()">🗑️ DELETE</button>
@@ -626,31 +641,20 @@
   <script>
     let masterData = [];
     let masterHeaders = [
-      "Sl.No.",                       // 0
-      "Code No.",                     // 1
-      "Designation",                  // 2
-      "Name\n(in Capital Letters)",     // 3
-      "Father's/Husband's Name\n(in Capital letters)", // 4
-      "Gender",                       // 5
-      "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", // 6 to 16
-      "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
-      "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", // 17 to 36
-      "Total days worked",            // 37
-      "Rate of\nwages",               // 38
-      "Net\nAmt",                     // 39
-      "BANK A/C NO",                  // 40
-      "IFS CODE",                     // 41
-      "Date of Enrolment",            // 42
-      "Date of Discharge"             // 43
+      "Sl.No.", "Code No.", "Designation", "Name\n(in Capital Letters)",
+      "Father's/Husband's Name\n(in Capital letters)", "Gender",
+      ...Array(31).fill(""),
+      "Total days worked", "Rate of\nwages", "Net\nAmt",
+      "BANK A/C NO", "IFS CODE", "Date of Enrolment", "Date of Discharge"
     ];
 
     let mrSheets = [
-      { label: "MR NO. 1", title: "MR No. 74 RCC/1/SEP 2026, JOB No. JOB NO 101", jobNo: "JOB NO 101", rows: [] },
-      { label: "MR NO. 2", title: "MR No. 74 RCC/2/SEP 2026, JOB No. JOB NO 102", jobNo: "JOB NO 102", rows: [] }
+      { label: "MR NO. 1", title: "MR No. 74 RCC/1/OCT 2026, JOB No. JOB NO 101", jobNo: "JOB NO 101", rows: [] },
+      { label: "MR NO. 2", title: "MR No. 74 RCC/2/OCT 2026, JOB No. JOB NO 102", jobNo: "JOB NO 102", rows: [] }
     ];
     let currentMRIndex = 0;
     let selectedRowIdx = 0;
-    let activePeriod = localStorage.getItem("CPL_GLOBAL_MONTH") || "SEP 2026";
+    let activePeriod = "OCT 2026";
     let pendingConfirmAction = null;
     let undoStack = [];
     let redoStack = [];
@@ -696,7 +700,8 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       const savedMonth = localStorage.getItem("CPL_GLOBAL_MONTH");
-      if (savedMonth) activePeriod = savedMonth;
+      activePeriod = savedMonth || "OCT 2026";
+      updatePeriodHeaders();
 
       const localData = localStorage.getItem(`CPL_OFFLINE_SHEETS_${activePeriod}`);
       if (localData) {
@@ -707,6 +712,9 @@
             currentMRIndex = parsed.lastIndex || 0;
           }
         } catch(e) {}
+      } else {
+        // Fresh month workspace: keep the default MR titles aligned with the selected period.
+        mrSheets.forEach(sheet => { sheet.title = sheet.title.replace(/OCT 2026/g, activePeriod); });
       }
 
       fetch('/api/master-data')
@@ -832,11 +840,11 @@
       rowCopy[4] = found.fatherName;
       rowCopy[5] = found.gender || 'MALE';
       
-      const sundayDays = ["23", "30", "6", "13", "20"];
 
       for (let i = 6; i <= 36; i++) {
         let dayHeader = masterHeaders[i];
-        if (sundayDays.includes(dayHeader)) {
+        if (octoberPeriodDay(i) === null) { rowCopy[i] = ""; continue; }
+        if (isSundayIndex(i)) {
           rowCopy[i] = "SUNDAY";
         } else {
           rowCopy[i] = "P";
@@ -865,61 +873,26 @@
     }
 
     function applyAutoDashesForNewRow(rowCopy, rowObj = null) {
-      const recDateStr = rowCopy[42];
-      const disDateStr = rowCopy[43];
-
+      const recDateStr = rowCopy[42] || '';
+      const disDateStr = rowCopy[43] || '';
       let recDayLimit = 0;
       let disDayLimit = 99;
-
       const disFnAnEl = document.getElementById("dischargeFnAn");
-      let disFnAnVal = disFnAnEl ? disFnAnEl.value : (rowObj && rowObj.dischargeFnAn ? rowObj.dischargeFnAn : (rowCopy.dischargeFnAn || "F/N"));
-
-      if (recDateStr) {
-        let p = recDateStr.split('-');
-        if (p.length === 3) {
-          let d = parseInt(p[0]);
-          let m = p[1].toUpperCase();
-          if (m === 'AUG') recDayLimit = d;
-          else if (m === 'SEP') recDayLimit = 31 + d;
-        }
-      }
-
-      if (disDateStr) {
-        let p = disDateStr.split('-');
-        if (p.length === 3) {
-          let d = parseInt(p[0]);
-          let m = p[1].toUpperCase();
-          let baseLimit = (m === 'AUG') ? d : (31 + d);
-          
-          // Agar A/N hai toh discharge date (baseLimit) tak P rahega, F/N hai toh ek din pehle tak
-          disDayLimit = (disFnAnVal === 'A/N') ? baseLimit : (baseLimit - 1);
-        }
-      }
-
+      const disFnAnVal = disFnAnEl ? disFnAnEl.value : (rowObj && rowObj.dischargeFnAn ? rowObj.dischargeFnAn : (rowCopy.dischargeFnAn || "F/N"));
+      const toPeriodDay = getPeriodDayFromDateString;
+      const rec = toPeriodDay(recDateStr);
+      const dis = toPeriodDay(disDateStr);
+      if (rec !== null) recDayLimit = rec;
+      if (dis !== null) disDayLimit = (disFnAnVal === 'A/N') ? dis : dis - 1;
       for (let i = 6; i <= 36; i++) {
-        let dayNum = parseInt(masterHeaders[i]);
-        let isAug = (i <= 16);
-        let absoluteDay = isAug ? dayNum : (31 + dayNum);
-
+        const periodDay = octoberPeriodDay(i);
+        if (periodDay === null) { rowCopy[i] = ''; continue; }
         if (rowCopy[i] !== 'SUNDAY') {
-          if (recDayLimit > 0 && absoluteDay < recDayLimit) {
-            rowCopy[i] = '--';
-          } else if (disDayLimit < 99 && absoluteDay > disDayLimit) {
-            rowCopy[i] = '--';
-          } else {
-            if (!rowCopy[i] || rowCopy[i] === '' || rowCopy[i] === '--') {
-              rowCopy[i] = 'P';
-            }
-          }
+          if (recDayLimit > 0 && periodDay < recDayLimit) rowCopy[i] = '--';
+          else if (disDayLimit < 99 && periodDay > disDayLimit) rowCopy[i] = '--';
+          else if (!rowCopy[i] || rowCopy[i] === '' || rowCopy[i] === '--') rowCopy[i] = 'P';
         }
       }
-    }
-    function workerMatchesTrade(rowDesig, t) {
-      if (!rowDesig) return false;
-      const cleaned = String(rowDesig).trim().toUpperCase();
-      const parts = cleaned.split('/');
-      const trade = parts[parts.length - 1].trim();
-      return trade === t;
     }
 
     function openDLRWindow() {
@@ -928,7 +901,7 @@
         return;
       }
       const curMR = mrSheets[currentMRIndex];
-      if (!dlrCustomValues.mrNoText) dlrCustomValues.mrNoText = curMR.title.split(',')[0] || "MR No. 74 RCC/ /SEP 2026";
+      if (!dlrCustomValues.mrNoText) dlrCustomValues.mrNoText = curMR.title.split(',')[0] || "MR No. 74 RCC/ /OCT 2026";
       if (!dlrCustomValues.jobNoText) dlrCustomValues.jobNoText = curMR.jobNo || "JOB NO - MAINT. NVTRD";
 
       renderDLRContent();
@@ -990,7 +963,7 @@
             <div style="text-align:right;">${dlrCustomValues.dettTop.replace(/\n/g, '<br>')}</div>
           </div>
           <div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:10px; text-decoration:underline;">
-            SUMMARY OF DLR<br>(PD :- FROM 21 AUG 2026 TO 20 SEP 2026)
+            SUMMARY OF DLR<br>(PD :- FROM ${formatPeriodDate(getPeriodBounds().start, true)} TO ${formatPeriodDate(getPeriodBounds().end, true)})
           </div>
           <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:8px;">
             <div> ${dlrCustomValues.mrNoText}</div>
@@ -1019,10 +992,11 @@
       let totalPresentSum = 0;
 
       for (let i = 6; i <= 36; i++) {
+        if (octoberPeriodDay(i) === null) continue;
         let dayNum = masterHeaders[i];
-        let isSunday = ["23", "30", "6", "13", "20"].includes(dayNum);
-        let monthStr = (i <= 16) ? "Aug" : "Sep";
-        let formattedDate = `${dayNum}-${monthStr}-2026`;
+        let dateObj = getPeriodDate(i);
+        let isSunday = isSundayIndex(i);
+        let formattedDate = formatPeriodDate(dateObj, true);
 
         html += `<tr>`;
         html += `<td style="border:1px solid #000; font-weight:bold; padding:2px;">${formattedDate}</td>`;
@@ -1120,7 +1094,7 @@
       const range = XLSX.utils.decode_range(ws['!ref']);
       const sundayColIndices = [];
       masterHeaders.forEach((h, idx) => {
-        if (["23", "30", "6", "13", "20"].includes(h)) sundayColIndices.push(idx);
+        if (isSundayIndex(idx)) sundayColIndices.push(idx);
       });
 
       const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
@@ -1221,7 +1195,7 @@
         const range = XLSX.utils.decode_range(ws['!ref']);
         const sundayColIndices = [];
         masterHeaders.forEach((h, idx) => {
-          if (["23", "30", "6", "13", "20"].includes(h)) sundayColIndices.push(idx);
+          if (isSundayIndex(idx)) sundayColIndices.push(idx);
         });
 
         const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
@@ -1301,7 +1275,7 @@
         [dlrCustomValues.hq, "", "", "", "", "", "", dlrCustomValues.dettTop.split('\n')[1] || ""],
         ["", "", "", "", "", "", "", dlrCustomValues.dettTop.split('\n')[2] || ""],
         ["SUMMARY OF DLR"],
-        ["(PD :- FROM 21 AUG 2026 TO 20 SEP 2026)"],
+        [`(PD :- FROM ${formatPeriodDate(getPeriodBounds().start, true)} TO ${formatPeriodDate(getPeriodBounds().end, true)})`],
         [`MR No.:- ${dlrCustomValues.mrNoText}`, "", "", "", `JOB NO - ${dlrCustomValues.jobNoText}`],
         [""],
         // Header Row 1 (ON ROLL & PRESENT groups)
@@ -1322,10 +1296,11 @@
       let presentSums = new Array(activeTrades.length).fill(0);
 
       for (let i = 6; i <= 36; i++) {
+        if (octoberPeriodDay(i) === null) continue;
         let dayNum = masterHeaders[i];
-        let isSunday = ["23", "30", "6", "13", "20"].includes(dayNum);
-        let monthStr = (i <= 16) ? "Aug" : "Sep";
-        let formattedDate = `${dayNum}-${monthStr}-2026`;
+        let dateObj = getPeriodDate(i);
+        let isSunday = isSundayIndex(i);
+        let formattedDate = formatPeriodDate(dateObj, true);
 
         let rowData = [formattedDate];
         if (isSunday) {
@@ -1490,6 +1465,7 @@
     function renderHeaders() {
       let r1 = "", r2 = "";
       for (let i = 0; i < masterHeaders.length; i++) {
+        if (i === 16) continue; // hidden placeholder: no September 31
         let displayStyle = "";
         if (currentTableViewMode === 2 && i >= 5 && i <= 36) {
           displayStyle = 'style="display:none;"';
@@ -1578,7 +1554,10 @@ function confirmAddMR() {
   showAlert("MR created successfully!");
 }
 
-    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    function closeModal(id) {
+      if (id === "editModal") paymentGridDraftRows = [];
+      document.getElementById(id).style.display = "none";
+    }
 
     function openCodeByModal() {
       if (mrSheets.length === 0) { showAlert("Please create an MR sheet first!", true); return; }
@@ -1677,10 +1656,10 @@ function confirmAddMR() {
           rowCopy[4] = found.fatherName;
           rowCopy[5] = found.gender || 'MALE';
           
-          const sundayDays = ["23", "30", "6", "13", "20"];
-          for (let i = 6; i <= 36; i++) {
+              for (let i = 6; i <= 36; i++) {
             let dayHeader = masterHeaders[i];
-            if (sundayDays.includes(dayHeader)) {
+            if (octoberPeriodDay(i) === null) { rowCopy[i] = ""; continue; }
+            if (isSundayIndex(i)) {
               rowCopy[i] = "SUNDAY";
             } else {
               rowCopy[i] = "P";
@@ -1782,44 +1761,91 @@ function confirmAddMR() {
       showAlert("Working days applied successfully to Column AL!");
     }
 
+    function getPeriodBounds(period = activePeriod) {
+      const match = String(period || "OCT 2026").trim().toUpperCase().match(/^([A-Z]{3})\s+(\d{4})$/);
+      const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const monthIndex = match ? monthNames.indexOf(match[1]) : 9;
+      const year = match ? parseInt(match[2], 10) : 2026;
+      const selectedMonth = monthIndex >= 0 ? monthIndex : 9;
+      const start = new Date(year, selectedMonth - 1, 21);
+      const end = new Date(year, selectedMonth, 20);
+      start.setHours(12,0,0,0); end.setHours(12,0,0,0);
+      return { start, end, year, monthIndex: selectedMonth, length: Math.round((end-start)/86400000)+1 };
+    }
+
+    function getPeriodDate(index) {
+      if (index < 6 || index > 36) return null;
+      const bounds = getPeriodBounds();
+      const dayOffset = index - 6;
+      if (dayOffset >= bounds.length) return null;
+      const date = new Date(bounds.start);
+      date.setDate(date.getDate() + dayOffset);
+      return date;
+    }
+
+    function periodDayForIndex(index) {
+      return getPeriodDate(index) ? index - 5 : null;
+    }
+
+    function octoberPeriodDay(index) { return periodDayForIndex(index); } // Backward-compatible alias for existing code
+
+    function isSundayIndex(index) {
+      const date = getPeriodDate(index);
+      return !!date && date.getDay() === 0;
+    }
+
+    function formatPeriodDate(date, includeYear = false) {
+      if (!date) return "";
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return `${date.getDate()}-${months[date.getMonth()]}${includeYear ? `-${date.getFullYear()}` : ""}`;
+    }
+
+    function updatePeriodHeaders() {
+      const bounds = getPeriodBounds();
+      for (let i = 6; i <= 36; i++) {
+        const date = getPeriodDate(i);
+        masterHeaders[i] = date ? String(date.getDate()) : "";
+      }
+    }
+
+    function getPeriodDayFromDateString(dateStr) {
+      if (!dateStr) return null;
+      const raw = String(dateStr).trim();
+      let date = null;
+      const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (iso) date = new Date(+iso[1], +iso[2]-1, +iso[3], 12, 0, 0);
+      else {
+        const p = raw.split('-');
+        if (p.length === 3) {
+          const d = parseInt(p[0], 10), m = String(p[1]).slice(0,3).toUpperCase(), y = parseInt(p[2], 10);
+          const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+          const mi = monthNames.indexOf(m);
+          if (mi >= 0 && Number.isFinite(d) && Number.isFinite(y)) date = new Date(y, mi, d, 12, 0, 0);
+        }
+      }
+      if (!date || Number.isNaN(date.getTime())) return null;
+      const bounds = getPeriodBounds();
+      if (date < bounds.start || date > bounds.end) return null;
+      return Math.round((date - bounds.start) / 86400000) + 1;
+    }
+
     function calculateCorrectWorkingDays(row) {
       let totalDays = 0;
-      const weeks = [
-        { working: ["21", "22"], sunday: "23" },
-        { working: ["24", "25", "26", "27", "28", "29"], sunday: "30" },
-        { working: ["31", "1", "2", "3", "4", "5"], sunday: "6" },
-        { working: ["7", "8", "9", "10", "11", "12"], sunday: "13" },
-        { working: ["14", "15", "16", "17", "18", "19"], sunday: "20" }
-      ];
-
-      weeks.forEach(week => {
-        let hasAbsentInWeek = false;
-        let weekWorkingPresentCount = 0;
-
-        for (let i = 6; i <= 36; i++) {
-          let dayNum = masterHeaders[i];
-          if (week.working.includes(dayNum)) {
-            let val = row.rowData[i];
-            if (val === 'A' || val === '--') {
-              hasAbsentInWeek = true;
-            } else if (val === 'P' || val === '-') {
-              weekWorkingPresentCount++;
-            }
-          }
+      let weekWorkdayIndices = [];
+      for (let i = 6; i <= 36; i++) {
+        const date = getPeriodDate(i);
+        if (!date) continue;
+        if (date.getDay() === 0) {
+          const hasAbsent = weekWorkdayIndices.some(idx => row.rowData[idx] === 'A' || row.rowData[idx] === '--');
+          const sundayVal = row.rowData[i];
+          if (!hasAbsent && sundayVal === 'SUNDAY') totalDays++;
+          weekWorkdayIndices = [];
+        } else {
+          const val = row.rowData[i];
+          if (val === 'P' || val === '-') totalDays++;
+          weekWorkdayIndices.push(i);
         }
-
-        totalDays += weekWorkingPresentCount;
-
-        if (!hasAbsentInWeek) {
-          for (let i = 6; i <= 36; i++) {
-            if (masterHeaders[i] === week.sunday && row.rowData[i] === 'SUNDAY') {
-              totalDays++;
-              break;
-            }
-          }
-        }
-      });
-
+      }
       return totalDays;
     }
 
@@ -1885,19 +1911,7 @@ function confirmAddMR() {
 
         let disDateStr = String(r.rowData[43] || '').trim();
         let isDischargeOutOfBounds = false;
-        if (disDateStr) {
-          let p = disDateStr.split('-');
-          if (p.length === 3) {
-            let d = parseInt(p[0]);
-            let m = (p[1] || '').toUpperCase();
-            let y = parseInt(p[2]);
-            if (y === 2026) {
-              if (m === 'AUG' && d < 21) isDischargeOutOfBounds = true;
-              if (m === 'SEP' && d > 20) isDischargeOutOfBounds = true;
-              if (m !== 'AUG' && m !== 'SEP') isDischargeOutOfBounds = true;
-            }
-          }
-        }
+        if (disDateStr && getPeriodDayFromDateString(disDateStr) === null) isDischargeOutOfBounds = true;
 
         if (isDischargeOutOfBounds) {
           tr.style.color = '#c0392b';
@@ -1917,8 +1931,7 @@ function confirmAddMR() {
           }
           let val = r.rowData[c] || '';
           
-          const sundayDays = ["23", "30", "6", "13", "20"];
-          let isSundayCol = sundayDays.includes(masterHeaders[c]);
+          let isSundayCol = isSundayIndex(c);
 
           if (isSundayCol && currentTableViewMode !== 2) {
             let blockIndex = Math.floor(actualIdx / 20);
@@ -2117,15 +2130,163 @@ function confirmAddMR() {
       activeEditTabMode = mode;
       document.getElementById("tabBtnDetails").className = `edit-tab-btn ${mode === 'details' ? 'active' : ''}`;
       document.getElementById("tabBtnCalendar").className = `edit-tab-btn ${mode === 'calendar' ? 'active' : ''}`;
+      const gridBtn = document.getElementById("tabBtnGrid");
+      if (gridBtn) gridBtn.className = `edit-tab-btn ${mode === 'grid' ? 'active' : ''}`;
 
       document.getElementById("editDetailsView").style.display = mode === 'details' ? 'grid' : 'none';
       document.getElementById("editCalendarView").style.display = mode === 'calendar' ? 'flex' : 'none';
+      document.getElementById("editGridView").style.display = mode === 'grid' ? 'flex' : 'none';
 
       if (mode === 'details') renderEditDetailsView();
       if (mode === 'calendar') {
         renderLifecycleSettingsOnCalendarTab();
         renderAttendanceCalendar();
       }
+      if (mode === 'grid') renderPaymentGrid();
+    }
+
+    let paymentGridDraftRows = [];
+
+    const paymentGridColumns = [
+      { index: 0, letter: 'A', title: 'S/No.' },
+      { index: 1, letter: 'B', title: 'Code No.' },
+      { index: 2, letter: 'C', title: 'Designation' },
+      { index: 3, letter: 'D', title: 'Name' },
+      { index: 4, letter: 'E', title: "Father's/Husband's Name" },
+      { index: 37, letter: 'AL', title: 'Total Days Worked' },
+      { index: 38, letter: 'AM', title: 'Rate of Wages' },
+      { index: 39, letter: 'AN', title: 'Net Amount' },
+      { index: 40, letter: 'AO', title: 'Bank A/C No' },
+      { index: 41, letter: 'AP', title: 'IFS Code' },
+      { index: 42, letter: 'AQ', title: 'Date of Enrolment' },
+      { index: 43, letter: 'AR', title: 'Date of Discharge' }
+    ];
+
+    function renderPaymentGrid(focusRow = 0, focusCol = 0) {
+      const wrap = document.getElementById('paymentGridWrap');
+      if (!wrap) return;
+      let html = '<table class="payment-grid"><colgroup><col style="width:42px">';
+      paymentGridColumns.forEach(() => html += '<col>');
+      html += '</colgroup><thead><tr><th>#</th>';
+      paymentGridColumns.forEach(c => {
+        html += `<th>${c.letter}<br><span style="font-weight:normal">${escapeGridValue(c.title)}</span></th>`;
+      });
+      html += '</tr></thead><tbody>';
+      paymentGridDraftRows.forEach((row, rIdx) => {
+        html += `<tr><td class="rownum">${rIdx + 1}</td>`;
+        paymentGridColumns.forEach((c, cIdx) => {
+          const raw = row.rowData[c.index] == null ? '' : String(row.rowData[c.index]);
+          html += `<td class="grid-cell" contenteditable="true" spellcheck="false" data-grid-row="${rIdx}" data-grid-col="${cIdx}" onfocus="paymentGridSelectRow(this)" oninput="paymentGridInput(this)" onkeydown="paymentGridKeydown(event,this)" onpaste="paymentGridPaste(event,this)">${escapeGridValue(raw)}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+      autoFitPaymentGridColumns();
+      const target = wrap.querySelector(`[data-grid-row="${focusRow}"][data-grid-col="${focusCol}"]`);
+      if (target) { target.focus(); placeGridCaretAtEnd(target); }
+      updateEmpInfoBar();
+    }
+
+    function autoFitPaymentGridColumns() {
+      const table = document.querySelector('#paymentGridWrap .payment-grid');
+      if (!table) return;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.font = '12px Arial';
+      const cols = table.querySelectorAll('colgroup col');
+      paymentGridColumns.forEach((col, idx) => {
+        let maxWidth = ctx.measureText(`${col.letter} ${col.title}`).width + 22;
+        paymentGridDraftRows.forEach(row => {
+          const val = row.rowData[col.index] == null ? '' : String(row.rowData[col.index]);
+          maxWidth = Math.max(maxWidth, ctx.measureText(val).width + 22);
+        });
+        // Reasonable minimum, no artificial maximum: long names/account numbers fit.
+        maxWidth = Math.max(65, Math.ceil(maxWidth));
+        if (cols[idx + 1]) cols[idx + 1].style.width = `${maxWidth}px`;
+      });
+    }
+
+    function paymentGridSelectRow(cell) {
+      const idx = Number(cell.dataset.gridRow);
+      if (!Number.isNaN(idx)) {
+        selectedRowIdx = idx;
+        updateEmpInfoBar();
+      }
+    }
+
+    function escapeGridValue(value) {
+      return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function placeGridCaretAtEnd(cell) {
+      const range = document.createRange();
+      const selection = window.getSelection();
+      range.selectNodeContents(cell);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    function paymentGridInput(cell) {
+      const rIdx = Number(cell.dataset.gridRow);
+      const cIdx = Number(cell.dataset.gridCol);
+      const col = paymentGridColumns[cIdx];
+      const row = paymentGridDraftRows[rIdx];
+      if (row && col) row.rowData[col.index] = cell.innerText.replace(/\r?\n/g, '');
+      autoFitPaymentGridColumns();
+      updateEmpInfoBar();
+    }
+
+    function recalculatePaymentGridRow(row) {
+      const rawDesig = String(row.rowData[2] || 'MAZ').trim();
+      const parts = rawDesig.split('/');
+      const trade = parts[parts.length - 1].trim();
+      const rate = parseFloat(calculateRateByTrade(trade)) || 550;
+      const days = calculateCorrectWorkingDays(row);
+      row.rowData[37] = String(days);
+      row.rowData[38] = String(rate);
+      row.rowData[39] = String(days * rate);
+      updateEmpInfoBar();
+      renderBody();
+    }
+
+    function paymentGridMove(cell, rowDelta, colDelta) {
+      const r = Number(cell.dataset.gridRow) + rowDelta;
+      const c = Number(cell.dataset.gridCol) + colDelta;
+      if (r < 0 || r >= paymentGridDraftRows.length || c < 0 || c >= paymentGridColumns.length) return;
+      const next = document.querySelector(`#paymentGridWrap [data-grid-row="${r}"][data-grid-col="${c}"]`);
+      if (next) { next.focus(); placeGridCaretAtEnd(next); }
+    }
+
+    function paymentGridKeydown(event, cell) {
+      if (event.key === 'Enter') { event.preventDefault(); paymentGridMove(cell, event.shiftKey ? -1 : 1, 0); }
+      else if (event.key === 'Tab') { event.preventDefault(); paymentGridMove(cell, 0, event.shiftKey ? -1 : 1); }
+      else if (event.key === 'ArrowRight' && window.getSelection().isCollapsed) { event.preventDefault(); paymentGridMove(cell, 0, 1); }
+      else if (event.key === 'ArrowLeft' && window.getSelection().isCollapsed) { event.preventDefault(); paymentGridMove(cell, 0, -1); }
+      else if (event.key === 'ArrowDown') { event.preventDefault(); paymentGridMove(cell, 1, 0); }
+      else if (event.key === 'ArrowUp') { event.preventDefault(); paymentGridMove(cell, -1, 0); }
+    }
+
+    function paymentGridPaste(event, cell) {
+      const clip = event.clipboardData || window.clipboardData;
+      const text = clip ? clip.getData('text') : '';
+      if (!text || (!text.includes('\t') && !text.includes('\n'))) return;
+      event.preventDefault();
+      const matrix = text.replace(/\r/g, '').replace(/\n$/, '').split('\n').map(line => line.split('\t'));
+      const startR = Number(cell.dataset.gridRow);
+      const startC = Number(cell.dataset.gridCol);
+      matrix.forEach((line, dy) => {
+        const row = paymentGridDraftRows[startR + dy];
+        if (!row) return;
+        line.forEach((value, dx) => {
+          const col = paymentGridColumns[startC + dx];
+          if (!col || [0, 37, 38, 39].includes(col.index)) return;
+          row.rowData[col.index] = value;
+        });
+      });
+      renderPaymentGrid(startR, startC);
     }
 
     function setAttendanceMode(status) {
@@ -2148,7 +2309,7 @@ function confirmAddMR() {
       if (!row) return;
 
       let dayHeader = masterHeaders[colIdx];
-      let isSundayCol = ["23", "30", "6", "13", "20"].includes(dayHeader);
+      let isSundayCol = isSundayIndex(colIdx);
       if (isSundayCol || row.rowData[colIdx] === '--') return;
 
       pushUndoState();
@@ -2178,14 +2339,16 @@ function confirmAddMR() {
 
     function updateEmpInfoBar() {
       const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
-      const row = normalRows[selectedRowIdx];
+      const row = (activeEditTabMode === 'grid' && paymentGridDraftRows[selectedRowIdx])
+        ? paymentGridDraftRows[selectedRowIdx]
+        : normalRows[selectedRowIdx];
       if (!row) return;
       
       const code = row.rowData[1] || '';
       const desig = row.rowData[2] || '';
       const name = row.rowData[3] || '';
       const father = row.rowData[4] || '';
-      const days = row.rowData[37] || '31';
+      const days = row.rowData[37] || '30';
 
       const infoBar = document.getElementById("editEmpInfoBar");
       infoBar.innerHTML = `
@@ -2212,6 +2375,7 @@ function confirmAddMR() {
           renderLifecycleSettingsOnCalendarTab();
           renderAttendanceCalendar();
         }
+        if (activeEditTabMode === 'grid') renderPaymentGrid();
         document.getElementById("editModalTitle").innerText = `EDIT EMPLOYEE (S/No: ${selectedRowIdx + 1})`;
       } else {
         showAlert(direction > 0 ? "Yeh aakhri employee hai!" : "Yeh pehla employee hai!", true);
@@ -2223,6 +2387,7 @@ function confirmAddMR() {
       if (!curRows || curRows.length === 0) return showAlert("No rows to edit!", true);
       
       const normalRows = curRows.filter(r => !r.isGrandTotal);
+      paymentGridDraftRows = normalRows.map(r => ({ ...r, rowData: [...r.rowData] }));
       const toInput = document.getElementById("pageTotalTo");
       if (toInput) {
         toInput.value = Math.min(20, normalRows.length);
@@ -2421,61 +2586,32 @@ function confirmAddMR() {
       const row = normalRows[selectedRowIdx];
       if (!row) return;
       const calGrid = document.getElementById("calendarDaysGrid");
-      
-      let recDateStr = row.rowData[42] || '';
-      let disDateStr = row.rowData[43] || '';
-
-      let recDayLimit = 0;
-      let disDayLimit = 99;
-
+      const recDateStr = row.rowData[42] || '';
+      const disDateStr = row.rowData[43] || '';
       const disFnAnEl = document.getElementById("dischargeFnAn");
-      let disFnAnVal = disFnAnEl ? disFnAnEl.value : (row.dischargeFnAn || "F/N");
-
-      if (recDateStr) {
-        let p = recDateStr.split('-');
-        if (p.length === 3) {
-          let d = parseInt(p[0]);
-          let m = p[1].toUpperCase();
-          if (m === 'AUG') recDayLimit = d;
-          else if (m === 'SEP') recDayLimit = 31 + d;
-        }
-      }
-
-      if (disDateStr) {
-        let p = disDateStr.split('-');
-        if (p.length === 3) {
-          let d = parseInt(p[0]);
-          let m = p[1].toUpperCase();
-          let baseLimit = (m === 'AUG') ? d : (31 + d);
-          disDayLimit = (disFnAnVal === 'A/N') ? baseLimit : (baseLimit - 1);
-        }
-      }
-
+      const disFnAnVal = disFnAnEl ? disFnAnEl.value : (row.dischargeFnAn || "F/N");
+      const toPeriodDay = getPeriodDayFromDateString;
+      const rec = toPeriodDay(recDateStr);
+      const dis = toPeriodDay(disDateStr);
+      const recDayLimit = rec === null ? 0 : rec;
+      const disDayLimit = dis === null ? 99 : ((disFnAnVal === 'A/N') ? dis : dis - 1);
       let html = "";
       for (let i = 6; i <= 36; i++) {
-        let dayHeader = masterHeaders[i];
+        const dayHeader = masterHeaders[i];
+        const periodDay = octoberPeriodDay(i);
+        if (periodDay === null) continue;
         let val = row.rowData[i] || 'P';
-        let isAug = (i <= 16);
-        let dayNum = parseInt(dayHeader);
-        let absoluteDay = isAug ? dayNum : (31 + dayNum);
-
-        let isSundayCol = ["23", "30", "6", "13", "20"].includes(dayHeader);
+        const isSundayCol = [7, 14, 21, 28].includes(periodDay);
         let isFaded = false;
-
-        if (recDayLimit > 0 && absoluteDay < recDayLimit) {
-          isFaded = true;
-          val = '--';
-        }
-        if (disDayLimit < 99 && absoluteDay > disDayLimit) {
-          isFaded = true;
-          val = '--';
-        }
-
-        let cellClass = isFaded ? 'cal-day-cell faded' : (isSundayCol ? 'cal-day-cell sunday-cell' : 'cal-day-cell');
-        let isAbsent = (val === 'A' || val === '--');
-        let cellBg = (!isFaded && isAbsent && !isSundayCol) ? 'background: #f8d7da; border: 2px solid #dc3545; color: #dc3545;' : '';
-
-        html += `<div class="${cellClass}" style="${cellBg}" onclick="toggleSpecificDay(${i})">Day ${dayHeader}<br><span style="font-size:9.5px; font-weight:900;">${val}</span></div>`;
+        if (recDayLimit > 0 && periodDay < recDayLimit) { isFaded = true; val = '--'; }
+        if (disDayLimit < 99 && periodDay > disDayLimit) { isFaded = true; val = '--'; }
+        const actualDate = getPeriodDate(i);
+        const monthLabel = actualDate ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][actualDate.getMonth()] : '';
+        const actualDayLabel = actualDate ? actualDate.getDate() : dayHeader;
+        const cellClass = isFaded ? 'cal-day-cell faded' : (isSundayCol ? 'cal-day-cell sunday-cell' : 'cal-day-cell');
+        const isAbsent = (val === 'A' || val === '--');
+        const cellBg = (!isFaded && isAbsent && !isSundayCol) ? 'background: #f8d7da; border: 2px solid #dc3545; color: #dc3545;' : '';
+        html += `<div class="${cellClass}" style="${cellBg}" onclick="toggleSpecificDay(${i})">${actualDayLabel} ${monthLabel}<br><span style="font-size:9.5px; font-weight:900;">${val}</span></div>`;
       }
       calGrid.innerHTML = html;
     }
@@ -2494,6 +2630,15 @@ function confirmAddMR() {
 
       pushUndoState();
       const normalRows = mrSheets[currentMRIndex].rows.filter(r => !r.isGrandTotal);
+      // Commit grid draft only after UPDATE & APPLY is clicked.
+      paymentGridDraftRows.forEach((draft, index) => {
+        const targetRow = normalRows[index];
+        if (!targetRow) return;
+        paymentGridColumns.forEach(col => {
+          if ([0, 37, 38, 39].includes(col.index)) return;
+          targetRow.rowData[col.index] = draft.rowData[col.index];
+        });
+      });
       const row = normalRows[selectedRowIdx];
 
       if (disFnAnInput) {
@@ -2587,17 +2732,17 @@ function confirmAddMR() {
       newRow[4] = "";
       newRow[5] = "MALE";
       
-      const sundayDays = ["23", "30", "6", "13", "20"];
       for (let i = 6; i <= 36; i++) {
-        if (sundayDays.includes(masterHeaders[i])) {
+        if (octoberPeriodDay(i) === null) { newRow[i] = ""; continue; }
+        if (isSundayIndex(i)) {
           newRow[i] = "SUNDAY";
         } else {
           newRow[i] = "P";
         }
       }
-      newRow[37] = "31";
+      newRow[37] = String(getPeriodBounds().length);
       newRow[38] = "550";
-      newRow[39] = "17050";
+      newRow[39] = String(getPeriodBounds().length * 550);
       newRow[40] = "";
       newRow[41] = "";
       newRow[42] = "";
