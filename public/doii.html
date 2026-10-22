@@ -233,15 +233,6 @@ Officer Commanding
     window.addEventListener("DOMContentLoaded", async () => {
       const savedMonth = localStorage.getItem("CPL_GLOBAL_MONTH");
       if (savedMonth) activePeriod = savedMonth;
-      const localData = localStorage.getItem(`CPL_OFFLINE_SHEETS_${activePeriod}`);
-      if (localData) {
-        try {
-          const parsed = JSON.parse(localData);
-          if (parsed.mrSheets && parsed.mrSheets.length > 0) {
-            mrSheets = parsed.mrSheets;
-          }
-        } catch(e) {}
-      }
       await loadSubmittedSheets();
       const datedLine = `Dated : ________________ ${activePeriod}`;
       document.getElementById("displayBottomLeft").innerText = `Station : C/o 99 APO\n\n${datedLine}`;
@@ -252,14 +243,12 @@ Officer Commanding
     async function loadSubmittedSheets() {
       try {
         const response = await fetch(`/api/store-data/${encodeURIComponent(activePeriod)}`);
-        if (!response.ok) return;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const result = await response.json();
-        const storedSheets = Array.isArray(result.data) ? result.data : [];
-        const byLabel = new Map(mrSheets.map(sheet => [sheet.label, sheet]));
-        storedSheets.forEach(sheet => byLabel.set(sheet.label, sheet));
-        mrSheets = Array.from(byLabel.values());
+        mrSheets = Array.isArray(result.data) ? result.data : [];
       } catch (error) {
-        console.warn("DO-II could not load submitted MR sheets:", error);
+        mrSheets = [];
+        console.error("DO-II could not load submitted MR sheets:", error);
       }
     }
     function formatToStandardDate(inputDate) {
