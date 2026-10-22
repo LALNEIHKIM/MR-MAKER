@@ -676,11 +676,8 @@
       "BANK A/C NO", "IFS CODE", "Date of Enrolment", "Date of Discharge"
     ];
 
-    let mrSheets = [
-      { label: "MR NO. 1", title: "MR No. 74 RCC/1/OCT 2026, JOB No. JOB NO 101", jobNo: "JOB NO 101", rows: [] },
-      { label: "MR NO. 2", title: "MR No. 74 RCC/2/OCT 2026, JOB No. JOB NO 102", jobNo: "JOB NO 102", rows: [] }
-    ];
-    let currentMRIndex = 0;
+    let mrSheets = [];
+let currentMRIndex = -1;
     let selectedRowIdx = 0;
     let activePeriod = "OCT 2026";
     let pendingConfirmAction = null;
