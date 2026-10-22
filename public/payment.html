@@ -148,7 +148,8 @@
     #screen3 .store-table-wrap table { min-width:max-content; width:100%; }
     #screen3 .store-table-wrap thead tr:nth-child(2) th { background:#21df4e; position:sticky; top:22px; z-index:2; }
     #screen3 .store-table-wrap thead tr:first-child th { position:sticky; top:0; z-index:3; background:#f0f0f0; }
-    #screen3 .store-table-wrap tbody td { font-size:11px; font-weight:600; }
+    #screen3 .store-table-wrap thead th { padding:2px 3px; }
+    #screen3 .store-table-wrap tbody td { font-size:11px; font-weight:600; padding:2px 3px; line-height:1.15; }
     .modal-header { background: #2b579a; color: white; padding: 10px 16px; font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
     .btn-modal { padding: 6px 14px; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; }
 
@@ -974,19 +975,34 @@
       }
     }
 
+    function getDLRSourceSheet() {
+      const storeScreen = document.getElementById("screen3");
+      if (storeScreen && storeScreen.style.display !== "none" && selectedStoredMRIndex >= 0) {
+        return storedMRs[selectedStoredMRIndex] || null;
+      }
+      return mrSheets[currentMRIndex] || null;
+    }
+
+    function getDLRTrade(designation) {
+      const parts = String(designation || "").trim().toUpperCase().split("/");
+      return parts[parts.length - 1].trim();
+    }
+
+    function workerMatchesTrade(designation, trade) {
+      return getDLRTrade(designation) === String(trade || "").trim().toUpperCase();
+    }
+
     function openDLRWindow() {
-      if (mrSheets.length === 0) {
-        showAlert("Please create or select an MR sheet first!", true);
+      const curMR = getDLRSourceSheet();
+      if (!curMR) {
+        showAlert("Please select a payment MR or submitted MR first!", true);
         return;
       }
-      const curMR = mrSheets[currentMRIndex];
-      if (!dlrCustomValues.mrNoText) dlrCustomValues.mrNoText = curMR.title.split(',')[0] || "MR No. 74 RCC/ /OCT 2026";
-      if (!dlrCustomValues.jobNoText) dlrCustomValues.jobNoText = curMR.jobNo || "JOB NO - MAINT. NVTRD";
-
+      dlrCustomValues.mrNoText = curMR.title ? curMR.title.split(',')[0] : (curMR.label || "MR");
+      dlrCustomValues.jobNoText = curMR.jobNo || "";
       renderDLRContent();
       document.getElementById("screenDLR").style.display = "flex";
     }
-
     function closeDLRWindow() {
       document.getElementById("screenDLR").style.display = "none";
     }
@@ -1020,20 +1036,13 @@
     }
 
     function renderDLRContent() {
-      const curMR = mrSheets[currentMRIndex];
+      const curMR = getDLRSourceSheet();
+      if (!curMR) return;
       const rows = (curMR.rows || []).filter(r => !r.isGrandTotal);
-
       const standardTrades = ["MATE", "SKD-I", "SKD-II", "SKD-III", "CPDVR", "MAZ"];
-      let activeTrades = [];
-
-      standardTrades.forEach(t => {
-        let count = rows.filter(r => {
-          let desig = String(r.rowData[2] || '').trim().toUpperCase();
-          return desig.includes(t);
-        }).length;
-        if (count > 0) activeTrades.push(t);
-      });
-
+      const activeTrades = standardTrades.filter(trade =>
+        rows.some(row => workerMatchesTrade(row.rowData?.[2], trade))
+      );
       let container = document.getElementById("dlrReportContent");
       let html = `
         <div style="width: 190mm; min-height: 277mm; margin: 0 auto; background:#fff; padding: 10mm; border:1px solid #ccc; box-shadow:0 4px 12px rgba(0,0,0,0.1); font-family: Arial, Helvetica, sans-serif; font-size: 10px;">
@@ -1337,16 +1346,13 @@
       showAlert("All MR sheets exported to Excel successfully!");
     }
     function exportDLRToExcel() {
-      const curMR = mrSheets[currentMRIndex];
+      const curMR = getDLRSourceSheet();
+      if (!curMR) return showAlert("Please select a payment MR or submitted MR first!", true);
       const rows = (curMR.rows || []).filter(r => !r.isGrandTotal);
-
       const standardTrades = ["MATE", "SKD-I", "SKD-II", "SKD-III", "CPDVR", "MAZ"];
-      let activeTrades = [];
-      standardTrades.forEach(t => {
-        let count = rows.filter(r => workerMatchesTrade(r.rowData[2], t)).length;
-        if (count > 0) activeTrades.push(t);
-      });
-
+      const activeTrades = standardTrades.filter(trade =>
+        rows.some(row => workerMatchesTrade(row.rowData?.[2], trade))
+      );
       const totalColsCount = activeTrades.length * 2 + 1; // Date + On roll trades/total + Present trades/total
 
       let wsData = [
