@@ -113,7 +113,7 @@ Dett: N-V-T
       <!-- CENTER RESTRICTED & TITLE -->
       <div style="text-align:center; margin-bottom:12px; flex-shrink:0;">
         <h4 style="font-size:12px; text-decoration:underline; font-weight:900; letter-spacing:1px;">RESTRICTED</h4>
-        <h3 id="doHeaderTitle" style="font-size:13px; font-weight:900; text-decoration:underline; margin:3px 0;">SUMMARY OF DETT DO-II FOR THE MONTH OF SEP 2026</h3>
+        <h3 id="doHeaderTitle" style="font-size:13px; font-weight:900; text-decoration:underline; margin:3px 0;">SUMMARY OF DETT DO-II FOR THE MONTH OF OCT 2026</h3>
       </div>
 
       <!-- TABLE CONTAINER -->
@@ -146,7 +146,7 @@ Dett: N-V-T
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto; padding-top:10px; font-size:11px; font-weight:bold;">
         <div id="displayBottomLeft" style="white-space: pre-line;">Station : C/o 99 APO
 
-Dated : ________________ SEP 2026</div>
+Dated : ________________ OCT 2026</div>
         <div id="displayBottomRight" style="text-align:left; line-height:1.3; white-space: pre-line;">(Sujit Debnath)
 EE (Civ)
 Officer Commanding
@@ -185,7 +185,7 @@ Dett: N-V-T
           <label style="font-size:11px; font-weight:bold;">4. Bottom Left Text (Station & Dated):</label>
           <textarea id="editBottomLeft" rows="3" style="padding:5px; font-size:12px; background:#fff; resize:vertical;">Station : C/o 99 APO
 
-Dated : ________________ SEP 2026</textarea>
+Dated : ________________ OCT 2026</textarea>
         </div>
 
         <div class="form-group" style="display:flex; flex-direction:column; gap:3px;">
@@ -206,7 +206,7 @@ Officer Commanding
 
   <script>
     let mrSheets = [];
-    let activePeriod = localStorage.getItem("CPL_GLOBAL_MONTH") || "SEP 2026";
+    let activePeriod = localStorage.getItem("CPL_GLOBAL_MONTH") || "OCT 2026";
 
     function showAlert(message, isError = false) {
       const toast = document.getElementById("alertToast");
@@ -230,7 +230,7 @@ Officer Commanding
       return "550";
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
       const savedMonth = localStorage.getItem("CPL_GLOBAL_MONTH");
       if (savedMonth) activePeriod = savedMonth;
       const localData = localStorage.getItem(`CPL_OFFLINE_SHEETS_${activePeriod}`);
@@ -242,9 +242,26 @@ Officer Commanding
           }
         } catch(e) {}
       }
+      await loadSubmittedSheets();
+      const datedLine = `Dated : ________________ ${activePeriod}`;
+      document.getElementById("displayBottomLeft").innerText = `Station : C/o 99 APO\n\n${datedLine}`;
+      document.getElementById("editBottomLeft").value = `Station : C/o 99 APO\n\n${datedLine}`;
       loadAndRenderDO2();
     });
 
+    async function loadSubmittedSheets() {
+      try {
+        const response = await fetch(`/api/store-data/${encodeURIComponent(activePeriod)}`);
+        if (!response.ok) return;
+        const result = await response.json();
+        const storedSheets = Array.isArray(result.data) ? result.data : [];
+        const byLabel = new Map(mrSheets.map(sheet => [sheet.label, sheet]));
+        storedSheets.forEach(sheet => byLabel.set(sheet.label, sheet));
+        mrSheets = Array.from(byLabel.values());
+      } catch (error) {
+        console.warn("DO-II could not load submitted MR sheets:", error);
+      }
+    }
     function formatToStandardDate(inputDate) {
       if (!inputDate || inputDate === "00-00-0000" || inputDate === "-- Select Date --") return "";
       return String(inputDate).trim().replace(/\s*\(F\/N\)|\s*\(A\/N\)/gi, "").trim();
@@ -252,20 +269,24 @@ Officer Commanding
 
     function isDateWithinPeriod(dateStr) {
       if (!dateStr) return false;
-      let cleanStr = formatToStandardDate(dateStr);
-      let parts = cleanStr.split('-');
+      const cleanStr = formatToStandardDate(dateStr);
+      const parts = cleanStr.split('-');
       if (parts.length !== 3) return false;
-
-      let d = parseInt(parts[0]);
-      let m = parts[1].toUpperCase();
-      let y = parseInt(parts[2]);
-
-      if (y !== 2026) return false;
-      if (m === 'AUG') return d >= 21 && d <= 31;
-      if (m === 'SEP') return d >= 1 && d <= 20;
-      return false;
+      const day = Number.parseInt(parts[0], 10);
+      const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const monthIndex = months.indexOf(parts[1].toUpperCase());
+      const year = Number.parseInt(parts[2], 10);
+      const period = activePeriod.trim().toUpperCase().match(/^([A-Z]{3})\s+(\d{4})$/);
+      if (!period || monthIndex < 0 || !Number.isInteger(day)) return false;
+      const periodMonth = months.indexOf(period[1]);
+      const periodYear = Number(period[2]);
+      if (periodMonth < 0) return false;
+      const date = new Date(year, monthIndex, day, 12);
+      if (date.getFullYear() !== year || date.getMonth() !== monthIndex || date.getDate() !== day) return false;
+      const start = new Date(periodYear, periodMonth - 1, 21, 12);
+      const end = new Date(periodYear, periodMonth, 20, 12);
+      return date >= start && date <= end;
     }
-
     let do2Groups = [];
 
     function closeModal(id) { document.getElementById(id).style.display = "none"; }
@@ -379,7 +400,7 @@ Officer Commanding
       let globalSNo = 1;
 
       if (do2Groups.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="padding:20px; color:#666; text-align:center;">No movement records found within the active period (21 Aug to 20 Sep 2026).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="padding:20px; color:#666; text-align:center;">No movement records found within the active period.</td></tr>`;
         return;
       }
 

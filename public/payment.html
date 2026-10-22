@@ -135,6 +135,20 @@
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center; }
     .modal-window { background: #ffffff; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; }
+    .page-total-modal-window { width: 390px; padding: 20px; gap: 10px; }
+    .page-total-modal-window h3 { color:#2b579a; text-align:center; font-size:17px; margin-bottom:4px; }
+    .page-total-modal-window label { font-size:12px; font-weight:700; color:#333; }
+    .page-total-modal-window input { height:34px; padding:6px 9px; border:1.5px solid #9aafc8; border-radius:4px; font-size:14px; }
+    .page-total-modal-window p { padding:9px; background:#eef5ff; border-radius:4px; font-size:13px; }
+    #screen3 .store-sidebar { width:195px; position:absolute; inset:0 auto 0 0; background:linear-gradient(180deg,#087c70,#07594f); color:#fff; padding:12px; overflow:auto; }
+    #screen3 .store-main { margin-left:195px; padding:14px 18px; height:100vh; display:flex; flex-direction:column; gap:10px; }
+    #screen3 .store-heading { text-align:center; font-size:20px; color:#20334d; flex:1; }
+    #screen3 .store-feature-row { background:#dce8f4; border:1px solid #b8cadd; border-radius:6px; padding:9px 12px; display:flex; align-items:center; gap:8px; min-height:55px; }
+    #screen3 .store-table-wrap { background:#fff; border:1px solid #ccd3dc; border-radius:5px; flex:1; min-height:0; overflow:auto; }
+    #screen3 .store-table-wrap table { min-width:max-content; width:100%; }
+    #screen3 .store-table-wrap thead tr:nth-child(2) th { background:#21df4e; position:sticky; top:22px; z-index:2; }
+    #screen3 .store-table-wrap thead tr:first-child th { position:sticky; top:0; z-index:3; background:#f0f0f0; }
+    #screen3 .store-table-wrap tbody td { font-size:11px; font-weight:600; }
     .modal-header { background: #2b579a; color: white; padding: 10px 16px; font-size: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
     .btn-modal { padding: 6px 14px; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; }
 
@@ -330,33 +344,24 @@
   </div>
 
           <div style="display:flex; gap:3px; margin-left:4px;">
-            <button class="btn-view-toggle active-view" id="btnView1" onclick="switchTableView(1)">View 1</button>
-            <button class="btn-view-toggle" id="btnView2" onclick="switchTableView(2)">View 2</button>
+            <select id="viewModeSelect" onchange="switchTableView(Number(this.value))" style="height:24px;font-weight:bold"><option value="1">View 1</option><option value="2">View 2</option></select>
           </div>
 
           <div class="rs-total-box" onclick="insertGrandTotalRow()" title="Click to insert/update G/TOTAL row">
             G/TOTAL Rs <span id="grandTotalDisplay">0</span>
           </div>
+          <button class="btn-action" id="addingSystemButton" style="background:#6c757d" onclick="toggleAddingSource()">ADDING SYSTEM ▾</button>
+          <select id="addingSource" onchange="loadAddingSource()" style="display:none;height:24px;max-width:155px;padding:3px;border-radius:4px"><option value="">Select adding system</option><option value="master">Master</option><option value="previous">Previous Month Store Data</option></select>
         </div>
 
         <div class="action-buttons">
-          <div class="rs-total-box" style="border-color: #2980b9; gap: 3px; padding: 0 4px;" title="Manual Range Page-Total">
-            <span style="font-size:10.5px;">Page-Total S/No:</span>
-            <input type="number" id="pageTotalFrom" value="1" min="1" oninput="renderBody()" style="width: 32px; height: 18px; font-size: 11px; text-align: center; border: 1px solid #ccc; border-radius: 2px;">
-            <span style="font-size:10px;">to</span>
-            <input type="number" id="pageTotalTo" value="20" min="1" oninput="renderBody()" style="width: 32px; height: 18px; font-size: 11px; text-align: center; border: 1px solid #ccc; border-radius: 2px;">
-            <span style="color:#c0392b; font-size:11.5px; margin-left:2px;" id="pageTotalDisplay">0</span>
-          </div>
+          <button class="btn-action" style="background:#2980b9" onclick="openPageTotalModal()">PAGE TOTAL</button>
 
           <button class="btn-action btn-edit" id="btnEditRow" onclick="openEditModal()">✏️ EDIT INDL</button>
           
           <div class="dropdown">
             <button class="btn-action" style="background:#d35400; font-weight:900;">⚙️ OPTIONS ▾</button>
             <div class="dropdown-content">
-              <button onclick="openDLRWindow()">📌 DLR Summary</button>
-              <button onclick="window.open('/doii.html', '_blank')">📋 DO Part-II Order</button> <!-- Yeh wala add karna hai -->
-              <button onclick="exportTableToExcel()">📥 Export to Excel</button>
-              <button onclick="exportAllExcelSheets()">📊 All Excel Export</button>
               <button onclick="deleteActiveMR()" style="color:#c0392b;">🗑️ Delete MR</button>
               <button onclick="changeRowFontColorModal()">🎨 Row Font Colour Changed</button>
               <button onclick="changeRowHighlightColorModal()">🖌️ Row Highlight Colour Changed</button>
@@ -364,6 +369,8 @@
           </div>
 
           <button class="btn-action btn-goto-home" onclick="goToHome()">🏠 HOME</button>
+          <button class="btn-action" style="background:#16a085;font-weight:900" onclick="submitStoreData()">SUBMIT</button>
+          <button class="btn-action" style="background:#34495e" onclick="openScreen3()">STORE DATA</button>
         </div>
       </div>
       <div class="table-container">
@@ -375,6 +382,16 @@
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="pageTotalModal">
+    <div class="modal-window page-total-modal-window">
+      <h3>PAGE TOTAL SERIAL RANGE</h3>
+      <label>Serial number from</label><input type="number" id="pageTotalFrom" value="1" min="1">
+      <label>Serial number to</label><input type="number" id="pageTotalTo" value="20" min="1">
+      <p>Current page total: Rs <strong id="pageTotalDisplay">0</strong></p>
+      <div class="modal-btn-row"><button class="btn-modal" style="background:#777" onclick="closeModal('pageTotalModal')">CLOSE</button><button class="btn-modal" style="background:#2980b9" onclick="applyPageTotalRange()">APPLY</button></div>
     </div>
   </div>
 
@@ -638,8 +655,18 @@
   </div>
 
   
+  <div id="screen3" style="display:none;position:fixed;inset:0;background:#f3f5f7;z-index:450;overflow:auto">
+    <aside class="store-sidebar"><h3 style="font-size:14px">SUBMITTED MR NO.</h3><p id="storedPeriodTitle" style="font-size:11px;margin:7px 0 10px"></p><div id="storedDataList" style="background:#fff;color:#222;padding:6px;border-radius:4px;font-size:12px"></div></aside>
+    <main class="store-main"><header style="display:flex;align-items:center;min-height:38px"><h2 class="store-heading">STORE DATA</h2><button class="btn-modal" style="background:#2980b9;white-space:nowrap" onclick="closeScreen3()">BACK TO PAYMENT</button></header>
+    <div class="store-feature-row"><div class="dropdown" style="display:inline-block"><button class="btn-modal" style="background:#d35400;padding:9px 20px">FEATURES ▾</button><div class="dropdown-content" style="position:absolute;z-index:5;background:white"><button onclick="openDLRWindow()">DLR</button><button onclick="window.open('/doii.html','_blank')">DO-II</button><button onclick="exportSelectedStoredMR()">Excel: Selected MR</button><button onclick="exportStoredDataToExcel()">Excel: All Submitted MR</button></div></div><button class="btn-modal" style="background:#d35400" onclick="requestEditAccess()">✉️ REQUEST EDIT APPROVAL</button><button id="adminApprovalButton" class="btn-modal" style="background:#8e44ad;display:none" onclick="loadAdminApprovals()">ADMIN APPROVALS</button></div>
+    <div id="storeDataMessage" class="store-table-wrap"><div style="padding:18px;color:#666">Select a submitted MR number on the left to view its payment sheet.</div></div><div id="adminApprovalList"></div></main>
+  </div>
+
   <script>
     let masterData = [];
+    let addingData = [];
+    let storedMRs = [];
+    let selectedStoredMRIndex = -1;
     let masterHeaders = [
       "Sl.No.", "Code No.", "Designation", "Name\n(in Capital Letters)",
       "Father's/Husband's Name\n(in Capital letters)", "Gender",
@@ -702,6 +729,7 @@
       const savedMonth = localStorage.getItem("CPL_GLOBAL_MONTH");
       activePeriod = savedMonth || "OCT 2026";
       updatePeriodHeaders();
+      if (localStorage.getItem('CPL_ADMIN_LOGGED') === 'true') document.getElementById('adminApprovalButton').style.display='inline-block';
 
       const localData = localStorage.getItem(`CPL_OFFLINE_SHEETS_${activePeriod}`);
       if (localData) {
@@ -736,6 +764,53 @@
       if(doiiScreen) doiiScreen.style.display = "none";
     });
 
+    function adminHeaders(){return {'Content-Type':'application/json','x-cpl-admin':localStorage.getItem('CPL_ADMIN_LOGGED')==='true'?'admin':''};}
+    function openScreen3(){document.getElementById('screen3').style.display='block';document.getElementById('storedPeriodTitle').textContent=`Active period: ${activePeriod}`;loadStoredDataList();}
+    function closeScreen3(){document.getElementById('screen3').style.display='none';}
+    async function submitStoreData(){
+      if(!mrSheets[currentMRIndex]) return showAlert('Please create/select an MR sheet first!',true);
+      const name=localStorage.getItem('CPL_LOGGED_USER')||'ADMIN';
+      const submittedIndex=currentMRIndex, submittedSheet=mrSheets[submittedIndex];
+      try{const r=await fetch('/api/submit',{method:'POST',headers:adminHeaders(),body:JSON.stringify({name,period:activePeriod,data:{mrSheets:[submittedSheet],lastIndex:0}})});const raw=await r.text();let d;try{d=JSON.parse(raw);}catch{throw Error(r.status===404||raw.includes('<!DOCTYPE')||raw.includes('Cannot POST')?'Updated server API load nahi hai. Server band karke updated folder se `node server.js` dobara chalayen.':`Server response samajh nahi aaya (HTTP ${r.status}).`);}if(!r.ok)throw Error(d.error||`Submit failed (HTTP ${r.status})`);mrSheets.splice(submittedIndex,1);currentMRIndex=Math.max(0,Math.min(submittedIndex,mrSheets.length-1));saveToLocal(true);renderMRTabs();renderBody();showAlert(`${submittedSheet.label} submitted and moved to Store Data.`);openScreen3();}
+      catch(e){showAlert(e.message||'Store failed',true);}
+    }
+    async function loadStoredDataList(){
+      const box=document.getElementById('storedDataList');if(!box)return;
+      try{const r=await fetch('/api/store-data/'+encodeURIComponent(activePeriod));const d=await r.json();if(!r.ok)throw Error(d.error||'Store data load nahi hua');storedMRs=d.data||[];selectedStoredMRIndex=-1;box.innerHTML=storedMRs.length?storedMRs.map((s,i)=>`<button style="display:block;width:100%;text-align:left;padding:9px;margin:4px 0;border:0;border-radius:4px;cursor:pointer" onclick="selectStoredMR(${i})">${s.label||`MR NO. ${i+1}`}</button>`).join(''):'<p>Abhi koi MR submit nahi hua.</p>';}
+      catch{box.textContent='Store data load nahi hua.';}
+    }
+    function selectStoredMR(index){
+      selectedStoredMRIndex=index;const mr=storedMRs[index];if(!mr)return;
+      const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const headerA=masterHeaders.map((_,i)=>`<th>${getColumnLetter(i)}</th>`).join('');
+      const headerB=masterHeaders.map((h,i)=>`<th>${esc(h).replace(/\n/g,'<br>')}</th>`).join('');
+      const body=(mr.rows||[]).map((row,ri)=>{const cells=row.rowData||[];return `<tr style="${row.isGrandTotal?'font-weight:900;background:#f8e7bf':ri%2?'background:#f7f9fc':''}">${masterHeaders.map((_,ci)=>`<td>${esc(cells[ci]??'')}</td>`).join('')}</tr>`;}).join('');
+      document.getElementById('storeDataMessage').innerHTML=`<div style="padding:9px 12px;background:#f4f7fb;border-bottom:1px solid #ccd3dc"><strong>${esc(mr.label||'MR')}</strong> &nbsp; ${esc(mr.title||'')} <span style="float:right">${(mr.rows||[]).filter(r=>!r.isGrandTotal).length} rows</span></div><table><thead><tr>${headerA}</tr><tr>${headerB}</tr></thead><tbody>${body||`<tr><td colspan="${masterHeaders.length}" style="padding:18px;text-align:center">No payment rows in this MR.</td></tr>`}</tbody></table>`;
+      document.querySelectorAll('#storedDataList button').forEach((b,i)=>{b.style.background=i===index?'#c9f2e5':'#fff';b.style.fontSize='12px';});
+    }
+    async function exportSelectedStoredMR(){if(selectedStoredMRIndex<0)return showAlert('Pehle left side se MR number select karein.',true);const mr=storedMRs[selectedStoredMRIndex];const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet([masterHeaders,...(mr.rows||[]).map(row=>row.rowData||[])]);XLSX.utils.book_append_sheet(wb,ws,String(mr.label||'MR').slice(0,31));XLSX.writeFile(wb,`${String(mr.label||'MR').replace(/\s+/g,'_')}_${activePeriod.replace(/\s+/g,'_')}.xlsx`);}
+    function toggleAddingSource(){const select=document.getElementById('addingSource');select.style.display=select.style.display==='none'?'inline-block':'none';if(select.style.display!=='none')select.focus();}
+    function openPageTotalModal(){const count=(mrSheets[currentMRIndex]?.rows||[]).filter(r=>!r.isGrandTotal).length;document.getElementById('pageTotalFrom').value='1';document.getElementById('pageTotalTo').value=String(Math.min(20,count)||20);document.getElementById('pageTotalModal').style.display='flex';}
+    function applyPageTotalRange(){const from=document.getElementById('pageTotalFrom'),to=document.getElementById('pageTotalTo');if(Number(from.value)<1||Number(to.value)<Number(from.value))return showAlert('Serial number range sahi enter karein.',true);renderBody();closeModal('pageTotalModal');}
+    async function exportStoredDataToExcel(){
+      try{const r=await fetch('/api/store-data/'+encodeURIComponent(activePeriod));const d=await r.json();if(!d.found||!d.data.length)return showAlert('No stored MR data found for this period.',true);const wb=XLSX.utils.book_new();d.data.forEach((mr,i)=>{const rows=[masterHeaders,...(mr.rows||[]).map(row=>row.rowData||[])];const ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,String(mr.label||`MR${i+1}`).slice(0,31));});XLSX.writeFile(wb,`STORE_DATA_${activePeriod.replace(/\s+/g,'_')}.xlsx`);}
+      catch(e){showAlert('Stored data export failed.',true);}
+    }
+    async function loadAddingSource(){
+      const source=document.getElementById('addingSource').value;
+      document.getElementById('addingSource').style.display='none';
+      if(!source){addingData=[];populateDatalists();return;}
+      if(source==='master'){addingData=masterData;populateDatalists();return;}
+      const previous=previousPeriodName(activePeriod);
+      try{const r=await fetch('/api/store-data/'+encodeURIComponent(previous));const d=await r.json();addingData=d.found?d.data.flatMap(s=>s.rows||[]):[];if(!addingData.length)showAlert(`No stored data found for ${previous}`,true);populateDatalists();}
+      catch{addingData=[];showAlert('Previous month store data not found.',true);}
+    }
+    function previousPeriodName(period){const m=String(period).match(/^([A-Z]{3}) (\d{4})$/);if(!m)return period;const months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];const i=months.indexOf(m[1]);const dt=new Date(Number(m[2]),i-1,1);return months[dt.getMonth()]+' '+dt.getFullYear();}
+    async function requestEditAccess(){const message=prompt('Admin ko edit request ka reason likhein:');if(!message)return;try{const r=await fetch('/api/edit-requests',{method:'POST',headers:adminHeaders(),body:JSON.stringify({name:localStorage.getItem('CPL_LOGGED_USER')||'ADMIN',period:activePeriod,mrLabel:mrSheets[currentMRIndex]?.label,message})});const d=await r.json();if(!r.ok)throw Error(d.error);showAlert('Edit request admin ko bhej di gayi.');}catch(e){showAlert(e.message,true);}}
+    async function loadAdminApprovals(){const box=document.getElementById('adminApprovalList');try{const [ur,er]=await Promise.all([fetch('/api/users',{headers:adminHeaders()}),fetch('/api/edit-requests',{headers:adminHeaders()})]);const users=await ur.json(),requests=await er.json();box.innerHTML='<h3>Pending users</h3>'+users.filter(u=>!u.approved).map(u=>`<div>${u.name} <button onclick="approveUser('${encodeURIComponent(u.name)}')">APPROVE</button></div>`).join('')+'<h3 style="margin-top:12px">Edit requests</h3>'+requests.filter(x=>x.status==='pending').map(x=>`<div style="padding:7px;background:white;margin:4px 0">${x.name} — ${x.period} — ${x.mrLabel}: ${x.message} <button onclick="approveEditRequest('${x.id}')">APPROVE</button></div>`).join('');}catch{box.textContent='Admin approvals load failed.';}}
+    async function approveUser(name){await fetch('/api/users/'+name+'/approve',{method:'POST',headers:adminHeaders()});loadAdminApprovals();}
+    async function approveEditRequest(id){await fetch('/api/edit-requests/'+id+'/approve',{method:'POST',headers:adminHeaders()});loadAdminApprovals();}
+
     function renderMRTabs() {
       const container = document.getElementById("mrTabsContainer");
       container.innerHTML = "";
@@ -757,8 +832,7 @@
 
     function switchTableView(viewNum) {
       currentTableViewMode = viewNum;
-      document.getElementById("btnView1").className = `btn-view-toggle ${viewNum === 1 ? 'active-view' : ''}`;
-      document.getElementById("btnView2").className = `btn-view-toggle ${viewNum === 2 ? 'active-view' : ''}`;
+      document.getElementById("viewModeSelect").value = String(viewNum);
       renderHeaders();
       renderBody();
     }
@@ -766,10 +840,12 @@
     function populateDatalists() {
       const nameDl = document.getElementById("nameOptions");
       nameDl.innerHTML = "";
-      masterData.forEach(item => {
-        if (item.name) {
+      (addingData || masterData).forEach(item => {
+        const rowData = item.rowData || [];
+        const itemName = item.name || rowData[3] || '';
+        if (itemName) {
           const opt = document.createElement("option");
-          opt.value = item.name;
+          opt.value = itemName;
           nameDl.appendChild(opt);
         }
       });
@@ -780,17 +856,18 @@
     function onNameSearchInput(val) {
       const query = val.trim().toLowerCase();
       if (!query) return;
+      if (!document.getElementById('addingSource').value) { document.getElementById('nameSearch').value=''; showAlert('Please select adding system first!', true); return; }
 
-      const matchedEmp = masterData.find(d => (d.name || '').toLowerCase() === query);
+      const matchedEmp = (addingData || masterData).find(d => String(d.name || (d.rowData||[])[3] || '').toLowerCase() === query);
       if (matchedEmp) {
         document.getElementById("nameSearch").value = "";
         selectedSearchedEmp = matchedEmp;
 
-        const code = matchedEmp.code || matchedEmp.rowData[1] || '';
+        const code = matchedEmp.code || (matchedEmp.rowData||[])[1] || '';
         const name = matchedEmp.name || matchedEmp.rowData[3] || '';
-        const father = matchedEmp.fatherName || matchedEmp.rowData[4] || '';
-        const account = matchedEmp.accountNo || matchedEmp.rowData[15] || '';
-        const recruitmentDate = matchedEmp.enrolmentDate || matchedEmp.rowData[22] || '';
+        const father = matchedEmp.fatherName || (matchedEmp.rowData||[])[4] || '';
+        const account = matchedEmp.accountNo || (matchedEmp.rowData||[])[40] || (matchedEmp.rowData||[])[15] || '';
+        const recruitmentDate = matchedEmp.enrolmentDate || (matchedEmp.rowData||[])[42] || (matchedEmp.rowData||[])[22] || '';
 
         let duplicateFound = false;
         let duplicateInfoText = "No (Not in any MR)";
@@ -829,16 +906,18 @@
     }
 
     function addSearchedEmployeeToSheet() {
+      if (!document.getElementById('addingSource').value) { showAlert('Please select adding system first!', true); return; }
       if (!selectedSearchedEmp) { closeModal('searchEmpModal'); return; }
       pushUndoState();
       const found = selectedSearchedEmp;
       const totalCols = masterHeaders.length;
       const rowCopy = new Array(totalCols).fill('');
-      rowCopy[1] = found.code;
-      rowCopy[2] = found.designation || 'MAZ';
-      rowCopy[3] = found.name;
-      rowCopy[4] = found.fatherName;
-      rowCopy[5] = found.gender || 'MALE';
+      const src=found.rowData||[];
+      rowCopy[1] = found.code || src[1] || '';
+      rowCopy[2] = found.designation || src[2] || 'MAZ';
+      rowCopy[3] = found.name || src[3] || '';
+      rowCopy[4] = found.fatherName || src[4] || '';
+      rowCopy[5] = found.gender || src[5] || 'MALE';
       
 
       for (let i = 6; i <= 36; i++) {
@@ -851,10 +930,10 @@
         }
       }
       
-      rowCopy[40] = found.accountNo;
-      rowCopy[41] = found.ifsCode;
-      rowCopy[42] = found.enrolmentDate;
-      rowCopy[43] = found.dischargeDate || "";
+      rowCopy[40] = found.accountNo || src[40] || '';
+      rowCopy[41] = found.ifsCode || src[41] || '';
+      rowCopy[42] = found.enrolmentDate || src[42] || '';
+      rowCopy[43] = found.dischargeDate || src[43] || '';
 
       applyAutoDashesForNewRow(rowCopy);
 
@@ -862,7 +941,7 @@
       rowCopy[38] = calculateRateByTrade(rowCopy[2]);
       rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
 
-      const newObj = { code: found.code, name: found.name, rowData: rowCopy };
+      const newObj = { code: rowCopy[1], name: rowCopy[3], rowData: rowCopy };
       if (!mrSheets[currentMRIndex].rows) mrSheets[currentMRIndex].rows = [];
       mrSheets[currentMRIndex].rows.push(newObj);
 
@@ -1465,7 +1544,7 @@
     function renderHeaders() {
       let r1 = "", r2 = "";
       for (let i = 0; i < masterHeaders.length; i++) {
-        if (i === 16) continue; // hidden placeholder: no September 31
+        // Keep every calendar day column visible in the on-screen table.
         let displayStyle = "";
         if (currentTableViewMode === 2 && i >= 5 && i <= 36) {
           displayStyle = 'style="display:none;"';
@@ -1561,6 +1640,7 @@ function confirmAddMR() {
 
     function openCodeByModal() {
       if (mrSheets.length === 0) { showAlert("Please create an MR sheet first!", true); return; }
+      if (!document.getElementById('addingSource').value) { showAlert('Please select adding system first!', true); return; }
       document.getElementById("bulkCodeInput").value = "";
       document.getElementById("codeStartNo").value = "";
       document.getElementById("bulkNamePreview").innerHTML = "<i>Names & Father's names will appear here as you paste codes...</i>";
@@ -1596,7 +1676,7 @@ function confirmAddMR() {
 
       codes.forEach((code, idx) => {
         const currentSNo = baseStartNo + idx;
-        const found = masterData.find(d => d.code.toLowerCase() === code.toLowerCase());
+        const found = (addingData || masterData).find(d => String(d.code || (d.rowData||[])[1] || '').toLowerCase() === code.toLowerCase());
         
         if (found) {
           const workerName = found.name || '';
@@ -1633,6 +1713,7 @@ function confirmAddMR() {
     }
 
     function applyBulkCodes() {
+      if (!document.getElementById('addingSource').value) { showAlert('Please select adding system first!', true); return; }
       const rawText = document.getElementById("bulkCodeInput").value;
       const codes = rawText.split(/[\n,]+/).map(c => c.trim()).filter(c => c.length > 0);
       const startNoInput = document.getElementById("codeStartNo").value.trim();
@@ -1646,15 +1727,16 @@ function confirmAddMR() {
       let addedCount = 0;
 
       codes.forEach(code => {
-        const found = masterData.find(d => d.code.toLowerCase() === code.toLowerCase());
+        const found = (addingData || masterData).find(d => String(d.code || (d.rowData||[])[1] || '').toLowerCase() === code.toLowerCase());
         if (found) {
           const totalCols = masterHeaders.length;
           const rowCopy = new Array(totalCols).fill('');
-          rowCopy[1] = found.code;
-          rowCopy[2] = found.designation || 'MAZ';
-          rowCopy[3] = found.name;
-          rowCopy[4] = found.fatherName;
-          rowCopy[5] = found.gender || 'MALE';
+          const src=found.rowData||[];
+          rowCopy[1] = found.code || src[1] || '';
+          rowCopy[2] = found.designation || src[2] || 'MAZ';
+          rowCopy[3] = found.name || src[3] || '';
+          rowCopy[4] = found.fatherName || src[4] || '';
+          rowCopy[5] = found.gender || src[5] || 'MALE';
           
               for (let i = 6; i <= 36; i++) {
             let dayHeader = masterHeaders[i];
@@ -1665,10 +1747,10 @@ function confirmAddMR() {
               rowCopy[i] = "P";
             }
           }
-          rowCopy[40] = found.accountNo;
-          rowCopy[41] = found.ifsCode;
-          rowCopy[42] = found.enrolmentDate;
-          rowCopy[43] = found.dischargeDate || "";
+          rowCopy[40] = found.accountNo || src[40] || '';
+          rowCopy[41] = found.ifsCode || src[41] || '';
+          rowCopy[42] = found.enrolmentDate || src[42] || '';
+          rowCopy[43] = found.dischargeDate || src[43] || "";
 
           applyAutoDashesForNewRow(rowCopy);
 
@@ -1676,7 +1758,7 @@ function confirmAddMR() {
           rowCopy[38] = calculateRateByTrade(rowCopy[2]);
           rowCopy[39] = String(parseFloat(rowCopy[37]) * parseFloat(rowCopy[38]));
 
-          const newObj = { code: found.code, name: found.name, rowData: rowCopy };
+          const newObj = { code: rowCopy[1], name: rowCopy[3], rowData: rowCopy };
           if (targetIndex < curRows.length) {
             curRows.splice(targetIndex, 0, newObj);
           } else {
