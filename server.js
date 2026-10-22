@@ -9,6 +9,74 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const storeDir = path.join(__dirname, 'store-data');
+const usersFile = path.join(storeDir, 'users.json');
+const submissionsFile = path.join(storeDir, 'submissions.json');
+const requestsFile = path.join(storeDir, 'edit-requests.json');
+fs.mkdirSync(storeDir, { recursive: true });
+function readStore(file, fallback = []) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
+}
+function writeStore(file, value) { fs.writeFileSync(file, JSON.stringify(value, null, 2)); }
+function isAdmin(req) { return req.get('x-cpl-admin') === 'admin'; }
+
+app.post('/api/register', (req, res) => {
+  const name = String(req.body.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  const users = readStore(usersFile);
+  if (users.some(u => u.name.toLowerCase() === name.toLowerCase())) return res.status(409).json({ error: 'Name already submitted. Please contact admin for approval.' });
+  users.push({ name, approved: false, createdAt: new Date().toISOString() });
+  writeStore(usersFile, users);
+  res.json({ message: 'Please contact admin for approval.' });
+});
+app.get('/api/users', (req, res) => isAdmin(req) ? res.json(readStore(usersFile)) : res.status(403).json({ error: 'Admin only' }));
+app.post('/api/users/:name/approve', (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Admin only' });
+  const users = readStore(usersFile); const user = users.find(u => u.name.toLowerCase() === decodeURIComponent(req.params.name).toLowerCase());
+  if (!user) return res.status(404).json({ error: 'User not found' }); user.approved = true; writeStore(usersFile, users); res.json({ ok: true });
+});
+app.post('/api/login', (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const user = readStore(usersFile).find(u => u.name.toLowerCase() === name.toLowerCase() && u.approved);
+  if (!user) return res.status(403).json({ error: 'Please contact admin for approval.' });
+  res.json({ ok: true, name: user.name });
+});
+app.post('/api/submit', (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const user = readStore(usersFile).find(u => u.name.toLowerCase() === name.toLowerCase() && u.approved);
+  if (!user && !isAdmin(req)) return res.status(403).json({ error: 'Please contact admin for approval.' });
+  const { period, data } = req.body;
+  if (!period || !data || !Array.isArray(data.mrSheets)) return res.status(400).json({ error: 'Invalid store data' });
+  const submissions = readStore(submissionsFile); const index = submissions.findIndex(s => s.period === period && String(s.owner || '').toLowerCase() === name.toLowerCase());
+  let mergedSheets = data.mrSheets;
+  if (index >= 0) {
+    const previousSheets = submissions[index].data?.mrSheets || [];
+    const byLabel = new Map(previousSheets.map(sheet => [sheet.label, sheet]));
+    for (const sheet of data.mrSheets) byLabel.set(sheet.label, sheet);
+    mergedSheets = Array.from(byLabel.values());
+  }
+  const record = { period, owner: name || 'ADMIN', data: { ...data, mrSheets: mergedSheets }, submittedAt: new Date().toISOString() };
+  if (index >= 0) submissions[index] = record; else submissions.push(record);
+  writeStore(submissionsFile, submissions); res.json({ ok: true });
+});
+app.get('/api/store-data/:period', (req, res) => {
+  const period = decodeURIComponent(req.params.period);
+  const records = readStore(submissionsFile).filter(s => s.period === period);
+  res.json({ period, data: records.flatMap(s => s.data.mrSheets || []), found: records.length > 0 });
+});
+app.post('/api/edit-requests', (req, res) => {
+  const name = String(req.body.name || '').trim(); const { period, mrLabel, message } = req.body;
+  if (!name || !message) return res.status(400).json({ error: 'Name and message are required' });
+  const requests = readStore(requestsFile); requests.push({ id: Date.now().toString(), name, period, mrLabel, message, status: 'pending', createdAt: new Date().toISOString() });
+  writeStore(requestsFile, requests); res.json({ ok: true });
+});
+app.get('/api/edit-requests', (req, res) => isAdmin(req) ? res.json(readStore(requestsFile)) : res.status(403).json({ error: 'Admin only' }));
+app.post('/api/edit-requests/:id/approve', (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Admin only' });
+  const requests = readStore(requestsFile); const item = requests.find(r => r.id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'Request not found' }); item.status = 'approved'; item.approvedAt = new Date().toISOString(); writeStore(requestsFile, requests); res.json({ ok: true });
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
