@@ -73,6 +73,9 @@
     .modal-window input { width: 100%; height: 34px; padding: 6px 10px; border: 1.5px solid #2b579a; border-radius: 4px; font-size: 13px; }
     .modal-btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 6px; }
     .btn-modal { padding: 6px 14px; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; color: white; }
+    .admin-corner { position:fixed; top:14px; right:16px; z-index:150; }
+    .user-panel { background:rgba(255,255,255,.96); width:360px; padding:18px 22px; border-radius:6px; display:flex; flex-direction:column; gap:10px; box-shadow:0 4px 15px rgba(0,0,0,.3); }
+    .user-panel input { height:34px; padding:7px; border:1px solid #aaa; border-radius:4px; }
   </style>
 </head>
 <body>
@@ -88,7 +91,8 @@
   </div>
 
   
-  <div class="title-banner"><h1>CPL PAYMENT MAKER</h1></div>
+  <button class="btn-operator-login admin-corner" style="width:auto;padding:10px 18px" onclick="openAdminModal()">ADMIN LOGIN</button>
+  <div class="title-banner"><h1>MUSTER ROLL MAKER</h1></div>
   <div class="pill-orange">HQ 74 RCC (GREF)</div>
   
   <div class="period-selector-panel">
@@ -108,7 +112,13 @@
 </select>
 
     </div>
-    <button class="btn-operator-login" onclick="openAdminModal()">ENTER AS ADMIN</button>
+  </div>
+
+  <div class="user-panel">
+    <h3 style="font-size:13px;color:#2b579a;text-align:center">USER LOGIN</h3>
+    <input id="userName" placeholder="Enter your name" onkeydown="if(event.key==='Enter') userLogin()">
+    <button class="btn-operator-login" onclick="userLogin()">LOGIN / REQUEST APPROVAL</button>
+    <p style="font-size:11px;text-align:center;color:#8a3b00">Please contact admin for approval.</p>
   </div>
 
   <div class="modal-overlay" id="adminModal">
@@ -149,7 +159,7 @@
 
     function submitAdminLogin() {
       const pwd = document.getElementById("adminPasswordInput").value;
-      if (pwd === "sep2026") {
+      if (pwd === "admin") {
         localStorage.setItem("CPL_LOGGED_USER", "ADMIN");
         localStorage.setItem("CPL_ADMIN_LOGGED", "true");
         localStorage.setItem("CPL_IN_PAYMENT_SCREEN", "true");
@@ -158,6 +168,24 @@
         alert("Incorrect Admin Password!");
         document.getElementById("adminPasswordInput").value = "";
       }
+    }
+
+    async function userLogin() {
+      const name = document.getElementById('userName').value.trim();
+      if (!name) return alert('Please enter your name.');
+      try {
+        let response = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
+        if (response.ok) {
+          localStorage.setItem('CPL_LOGGED_USER', name);
+          localStorage.setItem('CPL_ADMIN_LOGGED', 'false');
+          localStorage.setItem('CPL_IN_PAYMENT_SCREEN', 'true');
+          window.location.href = '/payment.html';
+          return;
+        }
+        const registered = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
+        const result = await registered.json();
+        alert(result.message || result.error || 'Please contact admin for approval.');
+      } catch { alert('Server se connect nahi ho paya. Please try again.'); }
     }
 
     window.addEventListener("DOMContentLoaded", () => {
